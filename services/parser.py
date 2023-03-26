@@ -1,0 +1,79 @@
+from typing import List, Tuple
+from bs4 import BeautifulSoup
+from services.dowload_html import process_download_html
+
+
+URL_MANGA = 'https://readmanga.live'
+
+
+async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[str], List[List[str]], List[str]]:
+    '''Функция сбора необходимой информации с сайта'''
+    soup = BeautifulSoup(html, 'html.parser')
+    div = soup.find('div', {'id': 'last-updates'})
+    # !сбор данных об обновленных элементах
+    # Получение названия
+    title = [links.find('a', href=True)['title'] for links in div.find_all('div', {'class': 'desc'})]
+    # Получение ссылки на мангу
+    manga_link = [links.find('a', href=True)['href'] for links in div.find_all('div', {'class': 'desc'})]
+    # print(*manga_link, sep='\n')
+
+    # Получение ссылки на изображение
+    images_links = div.find_all('a', {'class': 'non-hover'})  # вспомогательное
+    image_orig_link = [link.find('img')['data-original'] for link in images_links]
+    image_orig_link = [link.replace('_p.', '.') for link in image_orig_link if '_p.' in link]  # без этого символа, переходим на фото с более приятным качеством
+
+    # Получение списка обновленных глав
+    chapters = div.find_all('div', {'class': 'chapters'})
+    chapters = ([' '.join(x.text.strip().split()[:3])
+                    for x in par.find_all('a', href=True)]
+                    for par in chapters)
+    # print(*zip(title, image_orig_link, chapters), sep='\n')
+
+    # получение информации о произведении
+    manga_description = [dscr.text.strip() for dscr in div.find_all('div', {'class': 'manga-description'})]
+    # print(*manga_description, sep='\n\n')
+
+    # получение списка жанров
+    manga_genre = [[genre.text for genre in x.find_all('span', {'class': 'badge badge-light'})]
+                    for x in div.find_all('div', {'class': 'html-popover-holder'})]
+    manga_genre = [x for x in manga_genre if x != []]
+    # print(*manga_genre, sep='\n\n')
+    return title, chapters, image_orig_link, manga_genre, manga_description, manga_link
+
+
+async def process_start_parsing(page: int = 0):
+    # создание url страницы
+    url: str = f'https://readmanga.live/?offset={page * 30}#last-updates'
+    # забираем страницу с сайта
+    html_task = process_download_html(url)
+    html = await html_task
+    title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)
+    zipf = zip(title, chapters, image_orig_link, manga_genre, manga_description, manga_link)
+    return zipf
+
+
+async def process_manga_add_parsing(url: str):
+    html = await process_download_html(url)
+    if html is not None:
+        manga_link = url.replace('https://readmanga.live', '')
+        soup = BeautifulSoup(html, 'html.parser')
+        name = soup.find('span', {'class': 'name'})
+        if name is not None:
+            name = name.text
+        image_orig_link = soup.find('div', {'class': 'subject-cover col-sm-5'}).find('img')
+        if image_orig_link is not None:
+            image_orig_link = image_orig_link['src']
+        manga_genre = [genre.text for genre in soup.find_all('span', {'class': 'elem_genre'})]
+        manga_description = soup.find('div', {'class': 'manga-description'})
+        if manga_description is not None:
+            manga_description = manga_description.text
+        # print(name, manga_link, image_orig_link, manga_genre, manga_description, sep='\n')
+        # image_title, chapters, image_orig_link, manga_genre, manga_description, manga_link
+        return name, None, image_orig_link, manga_genre, manga_description, manga_link
+    else:
+        return None
+# asyncio.run(process_manga_add_parsing('https://readmanga.live/skazaniia_o_demonah_i_bogah__A5664'))
+
+
+# для отладки
+# asyncio.run(process_start_parsing())
