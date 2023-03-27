@@ -100,7 +100,7 @@ async def del_user_in_manga_decr_db(hash_name: str, user_id: int):
             if descr.users is not None and str(user_id) in descr.users:  # проверка на пустоту атрибута
                 user_list = descr.users.split(' * ')
                 del user_list[user_list.index(str(user_id))]
-                if descr.users != ['']:
+                if user_list != [''] and user_list != []:
                     descr.users = ' * '.join(user_list)
                 else:
                     descr.users = None

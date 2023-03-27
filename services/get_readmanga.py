@@ -4,7 +4,7 @@ from time import perf_counter
 from aiogram import Bot
 
 from database.db_update import read_all_update_status_false, create_update_table, add_update, remake_update_status_in_true
-from database.db_users import change_user_live_status, get_all_live_users, create_user_table, get_users_all_target, remake_list_user_without_all_target
+from database.db_users import change_user_live_status, create_user_table, get_users_all_target, remake_list_user_without_all_target
 from database.db_description import read_users_by_name_manga
 from lexicon.lexicon_ru import group_list_update_manga
 from keyboards.keyboards import update_manga_keyboard
@@ -42,7 +42,7 @@ async def send_message_to_target_users(bot: Bot, updates: list):
                         user_update_dict[user_id] = [update]
                         continue
                     user_update_dict[user_id].append(update)
-
+                    
         for chat_id, updates in user_update_dict.items():
             text_list = await group_list_update_manga(updates)
             for text in text_list:
@@ -80,7 +80,6 @@ async def some_coroutine(bot: Bot):
 
     start = perf_counter()
     updates = await read_all_update_status_false()  # список всех обновлений Update со статусом false
-    # await get_chat_members_status_for_user_live(bot)
     if updates:
         await send_message_to_target_users(bot, updates)  # рассылка по target
         updates_list = await group_list_update_manga(updates)  # группированный список обновлений в виде объединенных в строку

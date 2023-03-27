@@ -166,7 +166,7 @@ async def delete_manga_from_target(hash_name: str, user_id: id):
                 if hash_name in user_db.target:
                     manga_list = user_db.target.split(' * ')
                     del manga_list[manga_list.index(hash_name)]
-                    if manga_list != ['']:
+                    if manga_list != [''] and manga_list != []:
                         user_db.target = ' * '.join(manga_list)
                     else:
                         user_db.target = None
