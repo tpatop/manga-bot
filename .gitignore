@@ -1,0 +1,13 @@
+.env
+.idea
+
+.vscode/
+venv/
+__pycache__/
+вспомогательное
+analize
+
+!last.json
+!all.json
+bot.db
+.env.example

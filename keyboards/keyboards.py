@@ -70,6 +70,7 @@ KB_WIDTH = 1
 
 
 async def show_name_review_manga(callback: CallbackQuery):
+    '''Функция парсинга текста сообщения для сбора названий манги'''
     text = callback.message.text
     if text:
         text = text.split('\n\n')
@@ -77,7 +78,7 @@ async def show_name_review_manga(callback: CallbackQuery):
         for manga in text:
             if '.' not in manga:
                 continue
-            name = manga[manga.find('"') + 1: manga.find('"\n')]
+            name = manga[manga.find('. ') + 2: manga.find('\n')]
             names.append(name)
         return names
     return None
