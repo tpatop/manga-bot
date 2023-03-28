@@ -19,8 +19,12 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
 
     # Получение ссылки на изображение
     images_links = div.find_all('a', {'class': 'non-hover'})  # вспомогательное
-    image_orig_link = [link.find('img')['data-original'] for link in images_links]
-    image_orig_link = [link.replace('_p.', '.') for link in image_orig_link if '_p.' in link]  # без этого символа, переходим на фото с более приятным качеством
+    image_orig_link = []
+    for link in images_links:
+        if link.find('div', {'class': 'no-image'}):  # отсутствие картинки
+            image_orig_link.append('https://w7.pngwing.com/pngs/360/55/png-transparent-fate-grand-order-fate-stay-night-http-404-server-404-error-purple-violet-text.png')
+        else:
+            image_orig_link.append(link.find('img')['data-original'].replace('_p.', '.'))
 
     # Получение списка обновленных глав
     chapters = div.find_all('div', {'class': 'chapters'})

@@ -120,7 +120,7 @@ async def process_show_review_list(callback: CallbackQuery):
     )
 
 
-# обработка нажатия на клавиатуру с названием
+# обработка нажатия на клавиатуру с названием дляя показа описания
 @router.callback_query(Text(startswith='rev*'))
 async def process_show_review_manga(callback: CallbackQuery):
     hash_name = callback.data[4:]
@@ -136,6 +136,7 @@ async def process_show_review_manga(callback: CallbackQuery):
 
 
 from services.hash_all import hash_full_text
+
 
 # добавление в отслеживаемые с помощью инлайн-клавиатуры
 @router.callback_query(Text(text='/add_manga_in_target'))
@@ -210,8 +211,9 @@ async def process_show_menu_update_viewer(callback: CallbackQuery):
         text=LEXICON['show_update'],
         reply_markup=last_update_review_kb
     )
-    
 
+
+# показ обновлений 5-30
 @router.callback_query(Text(startswith='/showup*'))
 async def process_show_update_viewer(callback: CallbackQuery):
     quantity = int(callback.data.split()[1])
