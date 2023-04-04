@@ -5,6 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, Integer, String, Boolean
 from services.parser import process_start_parsing
 from database.db_description import create_description_table, add_description
+import time
 
 
 SQLITE_BOT_DB = 'bot.db'
@@ -14,7 +15,7 @@ Base = declarative_base()
 
 
 NUMBER_OF_PAGES: int = 20
-UPDATE_QUANTITY: int = 200
+UPDATE_QUANTITY: int = 2000
 
 
 def TIME_SLEEP():
@@ -165,9 +166,9 @@ async def add_update():  # функция обновления БД обновл
         session.commit()
         # print('завершение выполнения add_update')
         session = await process_clean_db_update_not_all(session)
-    except:
+    except Exception as e:
         session.rollback()
-        print('Ошибка в add_update')
+        print(f'\t\tПроизошла ошибка в add_update:\n{e}\n{time.strftime("%H:%M:%S", time.localtime())}')
         raise
     finally:
         session = await process_combining_values(session)

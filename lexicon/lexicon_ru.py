@@ -123,10 +123,11 @@ async def text_manga_target(user_id: int) -> str:
     return text
 
 
-async def text_manga_list_target(user_id: int) -> list:
+async def text_manga_list_target(user_id: int) -> list[tuple[str, str]]:
     manga_list = await read_manga_in_target(user_id)
     if manga_list is not None:
-        return manga_list.split(' * ')
+        manga_name = [manga_tuple[0] for manga_tuple in manga_list]
+        return manga_name
     return None
 
 

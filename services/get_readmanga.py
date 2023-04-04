@@ -42,7 +42,7 @@ async def send_message_to_target_users(bot: Bot, updates: list):
                         user_update_dict[user_id] = [update]
                         continue
                     user_update_dict[user_id].append(update)
-                    
+
         for chat_id, updates in user_update_dict.items():
             text_list = await group_list_update_manga(updates)
             for text in text_list:
@@ -72,27 +72,27 @@ async def send_message_to_all_target_users(bot: Bot, text_list: list[str]):
 
 
 async def some_coroutine(bot: Bot):
-    start = perf_counter()
+    # start = perf_counter()
     await add_update()
-    print(f'Обработка обновлений заняло = {perf_counter() - start} сек.')
+    # print(f'Обработка обновлений заняло = {perf_counter() - start} сек.')
 
     await asyncio.sleep(5)
 
-    start = perf_counter()
+    # start = perf_counter()
     updates = await read_all_update_status_false()  # список всех обновлений Update со статусом false
     if updates:
         await send_message_to_target_users(bot, updates)  # рассылка по target
         updates_list = await group_list_update_manga(updates)  # группированный список обновлений в виде объединенных в строку
         await send_message_to_all_target_users(bot, updates_list)  # массовая рассылка all_target
         await remake_update_status_in_true()  # перевод у всех обновлений статуса в true
-    print(f'Рассылка обновлений заняла = {perf_counter() - start} сек.')
+    # print(f'Рассылка обновлений заняла = {perf_counter() - start} сек.')
 
 
 async def additional(bot: Bot):
-    start = perf_counter()
+    # start = perf_counter()
     await create_update_table()
     await create_user_table()
-    print(f'Создание БД заняло = {perf_counter() - start} сек.')
+    # print(f'Создание БД заняло = {perf_counter() - start} сек.')
     while True:
         # try:
             await some_coroutine(bot)

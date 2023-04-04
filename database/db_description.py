@@ -58,18 +58,18 @@ async def add_description(updates: list[tuple[str]]):
                 Description.name == new_description.name
             ).first()
             if result:
-                print(f'\t  result игнорирует {new_description.name}')  # удалить
-                # continue
+                # print(f'\t  result игнорирует {new_description.name}')  # удалить
+                continue
             else:
-                print(f'\tresult добавляет {new_description.name}')  # удалить
+                # print(f'\tresult добавляет {new_description.name}')  # удалить
                 session.add(new_description)
             # description.append(new_description)
         # session.add_all(description)
         session.commit()
         # del description
-    except:
+    except Exception as e:
         session.rollback()
-        print('Ошибка в add_description')  # изменить на запись в файл с указанием времени
+        print(f'\t\tПроизошла ошибка в add_description:\n{e}')  # изменить на запись в файл с указанием времени
         raise
     finally:
         session.close()

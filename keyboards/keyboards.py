@@ -43,16 +43,28 @@ user_read_manga_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
 ).adjust(2, 1, 1).as_markup()
 
 
+ADJUST_CONST: int  # размер клавиатуры
+
+
 async def delete_manga_keyboard(user_id: int):
     manga_list = await text_manga_list_target(user_id)
+    if len(manga_list) > 30:
+        ADJUST_CONST = 3
+    else:
+        ADJUST_CONST = len(manga_list) // 10 + 1
     del_str = 'del*'
     if manga_list is not None:
-        return InlineKeyboardBuilder(
+        kb = InlineKeyboardBuilder(
         [[InlineKeyboardButton(
             text=name,
             callback_data=del_str + await hash_full_text(name))] for name in manga_list  # 1 символ = 2 байта
         ]
-).add(user_menu_but).adjust(1, repeat=True).as_markup()
+).adjust(ADJUST_CONST, repeat=True).as_markup()
+        kb = list(kb)[0][1]
+        kb.append([user_menu_but])
+        return InlineKeyboardMarkup(
+            inline_keyboard=kb
+        )
     else:
         return help_keyboard
 
