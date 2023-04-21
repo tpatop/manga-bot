@@ -8,6 +8,8 @@ URL_MANGA = 'https://readmanga.live'
 
 async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[str], List[List[str]], List[str]]:
     '''Функция сбора необходимой информации с сайта'''
+    if html is None:
+        return None
     soup = BeautifulSoup(html, 'html.parser')
     div = soup.find('div', {'id': 'last-updates'})
     # !сбор данных об обновленных элементах

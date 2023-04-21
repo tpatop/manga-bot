@@ -133,6 +133,9 @@ async def add_update():  # функция обновления БД обновл
             sleep(TIME_SLEEP())
             print(f'Отработка страницы {page + 1}')  # удалить
             zipf = await process_start_parsing(page)
+            if zipf is None:
+                flag = True
+                continue
             for update in zipf:
                 if update[1] == 0:  # чтобы не было ошибки при появлении подборок
                     continue

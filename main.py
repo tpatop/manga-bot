@@ -28,7 +28,7 @@ async def main():
     dp.include_router(router2)
 
     # удаляем предыдущие запросы
-    await bot.delete_webhook(drop_pending_updates=True)
+    # await bot.delete_webhook(drop_pending_updates=True)
     # # создаем меню
     # await set_main_menu(bot)
     # удаляем меню
