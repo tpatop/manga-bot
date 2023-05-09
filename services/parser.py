@@ -44,6 +44,7 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
                     for x in div.find_all('div', {'class': 'html-popover-holder'})]
     manga_genre = [x for x in manga_genre if x != []]
     # print(*manga_genre, sep='\n\n')
+    # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n')
     return title, chapters, image_orig_link, manga_genre, manga_description, manga_link
 
 
@@ -54,7 +55,8 @@ async def process_start_parsing(page: int = 0):
     html_task = process_download_html(url)
     html = await html_task
     title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)
-    zipf = zip(title, chapters, image_orig_link, manga_genre, manga_description, manga_link)
+    # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n\n')
+    zipf = title, chapters, image_orig_link, manga_genre, manga_description, manga_link
     return zipf
 
 
