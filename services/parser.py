@@ -29,8 +29,8 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
             image_orig_link.append(link.find('img')['data-original'].replace('_p.', '.'))
 
     # Получение списка обновленных глав
-    chapters = div.find_all('div', {'class': 'chapters'})
-    chapters = ([' '.join(x.text.strip().split()[:3])
+    chapters = div.find_all('div', {'class': 'chapters-text'})
+    chapters = tuple([' '.join(x.text.strip().split()[:3])
                     for x in par.find_all('a', href=True)]
                     for par in chapters)
     # print(*zip(title, image_orig_link, chapters), sep='\n')
@@ -56,8 +56,9 @@ async def process_start_parsing(page: int = 0):
     html = await html_task
     title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)
     # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n\n')
-    zipf = title, chapters, image_orig_link, manga_genre, manga_description, manga_link
-    return zipf
+    # Упаковываем
+    data_tuple = zip(title, chapters, image_orig_link, manga_genre, manga_description, manga_link)
+    return data_tuple
 
 
 async def process_manga_add_parsing(url: str):

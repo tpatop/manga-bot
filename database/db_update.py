@@ -133,13 +133,6 @@ async def add_update():  # функция обновления БД обновл
             sleep(TIME_SLEEP())
             print(f'{time.strftime("%H:%M:%S", time.localtime())} - обработка страницы {page + 1}\n')  # удалить (для отладки и проверки работы)
             zipf = await process_start_parsing(page)
-            print(type(zipf), len(zipf))
-            filesq = zip(zipf)
-
-            for i in list(filesq):
-                print('Вошел')
-                print(i)
-            break
             if zipf is None or zipf == []:
                 flag = True
                 continue
@@ -185,7 +178,7 @@ async def add_update():  # функция обновления БД обновл
         session.close()
         if updates:
             await add_description(updates)
-            # del updates  # не тестировал, в случае ошибок, удалить (15.03.2023 16.41)
+            del updates  # не тестировал, в случае ошибок, удалить (15.03.2023 16.41)
 
 
 async def read_all_update_status_false():
