@@ -1,0 +1,1 @@
+Test of mirror for gitlab <---> github
