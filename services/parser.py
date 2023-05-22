@@ -1,9 +1,7 @@
 from typing import List, Tuple
 from bs4 import BeautifulSoup
 from services.dowload_html import process_download_html
-
-
-URL_MANGA = 'https://readmanga.live'
+from lexicon.const_url import URL_MANGA
 
 
 async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[str], List[List[str]], List[str]]:
@@ -50,7 +48,7 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
 
 async def process_start_parsing(page: int = 0):
     # создание url страницы
-    url: str = f'https://readmanga.live/?offset={page * 30}#last-updates'
+    url: str = f'{URL_MANGA}/?offset={page * 30}#last-updates'
     # забираем страницу с сайта
     html_task = process_download_html(url)
     html = await html_task
@@ -64,7 +62,7 @@ async def process_start_parsing(page: int = 0):
 async def process_manga_add_parsing(url: str):
     html = await process_download_html(url)
     if html is not None:
-        manga_link = url.replace('https://readmanga.live', '')
+        manga_link = url.replace(f'{URL_MANGA}', '')
         soup = BeautifulSoup(html, 'html.parser')
         name = soup.find('span', {'class': 'name'})
         if name is not None:
@@ -81,8 +79,8 @@ async def process_manga_add_parsing(url: str):
         return name, None, image_orig_link, manga_genre, manga_description, manga_link
     else:
         return None
-# asyncio.run(process_manga_add_parsing('https://readmanga.live/skazaniia_o_demonah_i_bogah__A5664'))
 
+# asyncio.run(process_manga_add_parsing(f'{URL_MANGa}/skazaniia_o_demonah_i_bogah__A5664'))
 
 # для отладки
 # asyncio.run(process_start_parsing())

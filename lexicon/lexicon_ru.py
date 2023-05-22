@@ -1,7 +1,7 @@
 from database.db_users import check_manga_in_user_target, read_manga_in_target, read_user_in_db_with_user_id
 from database.db_update import read_all_update_status_false
 from database.db_description import read_descr_for_hash_name
-
+from lexicon.const_url import URL_MANGA
 
 async def user_menu_text(user_id: str):
     user = await read_user_in_db_with_user_id(user_id)
@@ -19,13 +19,13 @@ LEXICON: dict[str, str] = {
     'bad_message_answer': '''На данном этапе развития бота не нашлось применения для отправленного Вами сообщений. Прошу прощения!''',
     '/start':   '''Добро пожаловать на стартовую страницу бота!
     Для ознакомления с целью этого бота и его возможностями выбирай соответствующую кнопку, не кусает :)''',
-    '/help': '''Данный бот был создан с целью помочь тебе следить за выходом новых глав твоей любимой манги!
+    '/help': f'''Данный бот был создан с целью помочь тебе следить за выходом новых глав твоей любимой манги!
 
-    Обновления отслеживаются с сайта: <b>https://readmanga.live</b>
+    Обновления отслеживаются с сайта: <b>{URL_MANGA}</b>
 
     Бот находится в режиме бета-тестирования, поэтому возможны отдельные ошибки и неполадки, о которых прошу тебя сообщить мне в обратной связи на <b>@my_bot_helper</b>. Скриншоты и предложения одобряются :)''',
-    'add_manga_page': '''Для добавления манги в список отслеживаемых необходимо:
-    1. Перейти на сайт https://readmanga.live
+    'add_manga_page': f'''Для добавления манги в список отслеживаемых необходимо:
+    1. Перейти на сайт {URL_MANGA}
     2. Найти мангу, которую Вы хотите добавить в отслеживаемые
     3. Скопировать ссылку
     4. Отправить ссылку на мангу в данной форме
@@ -163,9 +163,6 @@ async def group_list_update_manga(updates: list):
             updates.append(update)
         return updates
     return None
-
-
-URL_MANGA = 'https://readmanga.live'
 
 
 async def create_text_review_manga(hash_name: str, user_id: int) -> tuple[str]:

@@ -6,7 +6,7 @@ from lexicon.lexicon_ru import group_list_update_manga, create_text_review_manga
 from keyboards.keyboards import update_manga_keyboard, last_update_review_kb, manga_settings_kb, manga_review_kb, create_review_manga_kb, delete_manga_keyboard, user_read_manga_keyboard, start_keyboard, help_keyboard, user_menu_keyboard
 from database.db_users import change_user_live_status, change_user_all_target, add_manga_in_target, add_manga_in_target_with_url, delete_manga_from_target
 from database.db_update import process_show_desc_updates_list
-
+from lexicon.const_url import URL_MANGA
 
 router: Router = Router()
 
@@ -60,7 +60,7 @@ async def process_add_manga_in_target_page(callback: CallbackQuery):
     )
 
 # добавление в отслеживаемые с помощью ссылки
-@router.message(Text(startswith='https://readmanga.live/'))
+@router.message(Text(startswith=f'{URL_MANGA}/'))
 async def process_add_manga_in_target(message: Message, bot: Bot):
     # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     result = await add_manga_in_target_with_url(message.text, message.from_user.id)
