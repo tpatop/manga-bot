@@ -11,5 +11,4 @@ analize
 !all.json
 bot.db
 .env.example
-requirements.txt
 python_core
