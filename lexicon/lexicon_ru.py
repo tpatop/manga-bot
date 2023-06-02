@@ -3,6 +3,7 @@ from database.db_update import read_all_update_status_false
 from database.db_description import read_descr_for_hash_name
 from lexicon.const_url import URL_MANGA
 
+
 async def user_menu_text(user_id: str):
     user = await read_user_in_db_with_user_id(user_id)
     if user.target is not None:  # and user.target != '':
@@ -10,9 +11,9 @@ async def user_menu_text(user_id: str):
     else:
         manga_count = 0
     return f'''Приветствую тебя, {user.fullname}!
-    Количество отслеживаемых тобой проектов = {manga_count}!
-    Подписка на получение всех обновлений = {'активна' if user.all_target else 'не активна'}.
-    Подписка на получение сообщений = {'активна' if user.live_status else 'не активна'}.'''
+    Ты отслеживаешь <i><b>{manga_count}</b></i> проектов!
+    Ты {('не подписан', 'подписан')[user.all_target]} на массовую рассылку обновлений.
+    Бот {('не может', 'может')[user.live_status]} отправлять тебе рассылку.'''
 
 
 LEXICON: dict[str, str] = {

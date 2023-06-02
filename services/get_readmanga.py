@@ -94,11 +94,11 @@ async def additional(bot: Bot):
     await create_user_table()
     # print(f'Создание БД заняло = {perf_counter() - start} сек.')
     while True:
-        # try:
+        try:
             await some_coroutine(bot)
-        # except:
-            # print('Произошла ошибка, возможно, отключен интернет!')
-        # finally:
+        except Exception as exc:
+            print(f'Произошла ошибка:\n{exc}')
+        finally:
             await asyncio.sleep(TIME_SLEEP)
 
 
