@@ -50,8 +50,7 @@ async def process_start_parsing(page: int = 0):
     # создание url страницы
     url: str = f'{URL_MANGA}/?offset={page * 30}#last-updates'
     # забираем страницу с сайта
-    html_task = process_download_html(url)
-    html = await html_task
+    html = await process_download_html(url)
     title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)
     # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n\n')
     # Упаковываем

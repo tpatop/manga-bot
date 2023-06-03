@@ -104,17 +104,17 @@ async def get_users_all_target():
         return users
 
 
-async def add_user_in_db(user_data: dict) -> None:
-    with Session() as db:
-        new_user = User(
-            user_id=user_data['user_id'],
-            username=user_data['username'],
-            fullname=user_data['fullname'],
-            update_date=user_data['update_date']
-        )
-        db.add(new_user)
-        db.commit()
-        print(f'Добавление пользователя c id = {user_data["user_id"]} завершено!')
+# async def add_user_in_db(user_data: dict) -> None:
+#     with Session() as db:
+#         new_user = User(
+#             user_id=user_data['user_id'],
+#             username=user_data['username'],
+#             fullname=user_data['fullname'],
+#             update_date=user_data['update_date']
+#         )
+#         db.add(new_user)
+#         db.commit()
+#         print(f'Добавление пользователя c id = {user_data["user_id"]} завершено!')
 
 
 async def add_manga_in_user_db(name: str, user_id: int):

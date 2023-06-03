@@ -14,7 +14,7 @@ class User(Base):
     username = Column(String, nullable=True)  # для обратной связи
     fullname = Column(String, nullable=True)  # для обращения
     update_date = Column(DateTime)  # для сравнения времени последнего обращения
-    target = Column(String, nullable=True)  # строка с аниме
+    target = Column(String, nullable=True)  # строка с аниме (переделать в JSON)
     all_target = Column(Boolean, default=False)  # широковещательная рассылка всех обновлений
     live_status = Column(Boolean, default=True)
 

@@ -3,16 +3,19 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from config_data.config import load_config, Config
-from handlers.middleware import user_in_database_middleware
+import handlers.middleware as middleware
 from handlers.user_handlers import router as router1
 from handlers.other_handlers import router as router2
 from services.get_readmanga import additional
+from database import DatabaseManagement, init
 
 
 bot: Bot
 
 
 async def main():
+    # Инициализируем асинхронную сессию к БД
+    database_management = DatabaseManagement(await init())
     # Загружаем конфиг в переменную среду
     config: Config = load_config(None)
 
@@ -21,7 +24,8 @@ async def main():
     dp: Dispatcher = Dispatcher()
 
     # регистрируем middleware
-    dp.message.middleware(user_in_database_middleware)
+    dp.update.middleware(middleware.PassManagementMiddleware(database_management))
+    dp.message.middleware(middleware.user_in_database_middleware)
 
     # регистрация роутеров в диспетчере
     dp.include_router(router1)

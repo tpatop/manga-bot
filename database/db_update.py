@@ -2,7 +2,7 @@ from time import sleep
 from random import randint
 import sqlalchemy
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, desc
 from services.parser import process_start_parsing
 from database.db_description import create_description_table, add_description
 import time
@@ -193,9 +193,6 @@ async def remake_update_status_in_true():
         for update in updates:
             update.status = True
         db.commit()
-
-
-from sqlalchemy import desc
 
 
 async def process_show_unique_name_in_update(quantity: int):

@@ -2,11 +2,38 @@ import asyncio
 from aiogram import Router, Bot
 from aiogram.filters import Text, CommandStart
 from aiogram.types import Message, CallbackQuery
-from lexicon.lexicon_ru import group_list_update_manga, create_text_review_manga, warning_message, TIME_DELETE, LEXICON, user_menu_text, text_manga_target
-from keyboards.keyboards import update_manga_keyboard, last_update_review_kb, manga_settings_kb, manga_review_kb, create_review_manga_kb, delete_manga_keyboard, user_read_manga_keyboard, start_keyboard, help_keyboard, user_menu_keyboard
-from database.db_users import change_user_live_status, change_user_all_target, add_manga_in_target, add_manga_in_target_with_url, delete_manga_from_target
+from lexicon.lexicon_ru import (
+    group_list_update_manga,
+    create_text_review_manga,
+    warning_message,
+    TIME_DELETE,
+    LEXICON,
+    user_menu_text,
+    text_manga_target
+)
+from keyboards.keyboards import (
+    update_manga_keyboard,
+    last_update_review_kb,
+    manga_settings_kb,
+    manga_review_kb,
+    create_review_manga_kb,
+    delete_manga_keyboard,
+    user_read_manga_keyboard,
+    start_keyboard,
+    help_keyboard,
+    user_menu_keyboard
+)
+from database.db_users import (
+    change_user_live_status,
+    change_user_all_target,
+    add_manga_in_target,
+    add_manga_in_target_with_url,
+    delete_manga_from_target
+)
 from database.db_update import process_show_desc_updates_list
 from lexicon.const_url import URL_MANGA
+from services.hash_all import hash_full_text
+
 
 router: Router = Router()
 
@@ -135,9 +162,6 @@ async def process_show_review_manga(callback: CallbackQuery):
     await callback.answer()
 
 
-from services.hash_all import hash_full_text
-
-
 # добавление в отслеживаемые с помощью инлайн-клавиатуры
 @router.callback_query(Text(text='/add_manga_in_target'))
 async def process_add_manga_in_target_callback(callback: CallbackQuery, bot: Bot):
@@ -179,10 +203,10 @@ async def show_settings_for_user(callback: CallbackQuery):
         reply_markup=await manga_settings_kb(callback.from_user.id)
     )
 
-    # '/all_target_false': 'Обновления из списка',
-    # '/all_target_true': 'Все обновления сайта',
-    # '/status_live_true': 'Не получать обновления!',
-    # '/status_live_false': 'Получать обновления!'
+# '/all_target_false': 'Обновления из списка',
+# '/all_target_true': 'Все обновления сайта',
+# '/status_live_true': 'Не получать обновления!',
+# '/status_live_false': 'Получать обновления!'
 
 
 @router.callback_query(Text(text='/all_target_true'))

@@ -11,3 +11,4 @@ analize
 bot.db
 .env.example
 python_core
+errors.txt
