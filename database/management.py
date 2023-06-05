@@ -1,10 +1,17 @@
-from typing import Union
+# from typing import Union
 
-from sqlalchemy import select, insert, update, delete, func, and_
+from sqlalchemy import select, update, and_  # , delete, func, insert,
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+# from sqlalchemy.orm import joinedload
 
 from . import models
+
+
+attribute = {
+            'user_id': models.User.user_id,
+            'all_target': models.User.all_target,
+            'live_status': models.User.live_status
+        }
 
 
 class BaseRepo:
@@ -39,6 +46,29 @@ class UserRepo(BaseRepo):
             result = await session.execute(query)
             return result.scalar_one_or_none()
 
+    async def update_user(self, user: models.User):
+        async with self.session as session:
+            query = update(models.User).where(
+                models.User.user_id == user.user_id
+            ).values(
+                username=user.username,
+                fullname=user.fullname,
+                target=user.target,
+                all_target=user.all_target,
+                live_status=user.live_status
+            )
+            await session.execute(query)
+            await session.commit()
+
+    async def get_users_list(self, change_dict: dict[str, str]):
+        async with self.session as session:
+            query = select(models.User).filter(
+                and_(*[attribute[k] == v for k, v in change_dict.items()])
+            )
+            result = await session.execute(query)
+            result = [user[0] for user in result.all() if user]
+            return result
+
 
 class DescriptionRepo(BaseRepo):
     pass
@@ -71,8 +101,6 @@ class DatabaseManagement:
         return UpdateRepo(self._session_maker)
 
     def get_repo(self, name):
-
         if name in self._repos:
             return self._repos[name]
-
         raise KeyError(name)

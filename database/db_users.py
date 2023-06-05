@@ -1,141 +1,101 @@
-import sqlalchemy
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
-# from services.dowload_html import process_download_html
 from services.parser import process_manga_add_parsing
-from database.db_description import read_manga_in_target_name, del_user_in_manga_decr_db, check_manga_in_db, add_description, add_user_in_manga_decr_db
+from database.db_description import (
+    read_manga_in_target_name,
+    del_user_in_manga_decr_db,
+    check_manga_in_db, add_description,
+    add_user_in_manga_decr_db
+)
 from services.hash_all import hash_full_text
+from .management import DatabaseManagement, UserRepo
+from .models import User
 
 
-'''https://metanit.com/python/database/3.1.php'''
-
-
-SQLITE_BOT_DB = 'bot.db'
-engine = None
-Session = None
-Base = declarative_base()
-
-
-async def create_user_table(database_url: str = SQLITE_BOT_DB):
-    global engine, Session, User
-    # создание синхронного движка, 1 движок - 1 БД
-    engine = sqlalchemy.create_engine(f'sqlite:///{database_url}')
-    # создание базовой модели
-    Base.metadata.create_all(engine)
-    # создаем модель, объекты которой будут храниться в бд
-
-    class User(Base):
-        # сопоставление класса с определенной таблицей в БД
-        __tablename__ = 'users'
-
-        user_id = Column(Integer, primary_key=True)
-        username = Column(String, nullable=True)  # для обратной связи
-        fullname = Column(String, nullable=True)  # для обращения
-        update_date = Column(DateTime)  # для сравнения времени последнего обращения
-        target = Column(String, nullable=True)  # строка с аниме
-        all_target = Column(Boolean, default=False)  # широковещательная рассылка всех обновлений
-        live_status = Column(Boolean, default=True)  # статус пользователя
-
-    # создание класса сессии
-    Session = sessionmaker(bind=engine)
-    # создание таблицы
-    conn = engine.connect()
-    Base.metadata.create_all(conn)
-    conn.close()
-
-
-async def read_user_in_db_with_user_id(user_id: int):
+async def _get_user(
+    user_id: int, db_management: DatabaseManagement
+):
     user_id = int(user_id)
-    with Session() as db:
-        return db.query(User).filter_by(user_id=user_id).first()
+    user_repo: UserRepo = db_management.get_user_repo()
+    user: User = await user_repo.get_user(user_id)
+    return user
 
 
-async def change_user_all_target(user_id: int):
-    with Session() as db:
-        try:
-            user = db.query(User).filter_by(user_id=user_id).first()
-            user.all_target = not user.all_target
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            print("An error occurred while trying to update the user: ", e)
+async def _update_user(
+    user: User, db_management: DatabaseManagement
+):
+    user_repo: UserRepo = db_management.get_user_repo()
+    await user_repo.update_user(user)
 
 
-async def change_user_live_status(user_id: int):
-    with Session() as db:
-        try:
-            user = db.query(User).filter_by(user_id=user_id).first()
-            user.live_status = not user.live_status
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            print("An error occurred while trying to update the user: ", e)
+async def change_user_all_target(
+    user_id: int, db_management: DatabaseManagement
+):
+    user: User = await _get_user(user_id, db_management)
+    user.all_target = not user.all_target
+    await _update_user(user, db_management)
 
 
-async def remake_list_user_without_all_target(users: list[int]) -> list[int]:
+async def change_user_live_status(
+    user_id: int, db_management: DatabaseManagement
+):
+    user: User = await _get_user(user_id, db_management)
+    user.live_status = not user.live_status
+    await _update_user(user, db_management)
+
+
+async def remake_list_user_without_all_target(
+        users: list[int], db_management: DatabaseManagement
+) -> list[int]:
+    user_repo: UserRepo = db_management.get_user_repo()
     users_list = []
-    with Session() as db:
-        for user_id in users:
-            result = db.query(User).filter_by(
-                user_id=user_id,
-                all_target=False,
-                live_status=True).first()
-            if result:
-                users_list.append(user_id)
-    if users_list:
+    change_dict = {'all_target': False, 'live_status': True}
+    for user_id in users:
+        change_dict['user_id'] = user_id
+        user = await user_repo.get_users_list(change_dict)
+        if user:
+            users_list.append(user[0].user_id)
+    if users_list is not None and users_list != []:
         return users_list
     return None
 
 
-async def check_user_in_db(user_id: int) -> bool:
-    user = await read_user_in_db_with_user_id(user_id)
-    return user is not None
-
-
-async def get_all_live_users():
-    with Session() as db:
-        users = db.query(User).filter_by(live_status=True).all()
-        return users
-
-
-async def get_users_all_target():
-    with Session() as db:
-        users = db.query(User).filter_by(all_target=True, live_status=True).all()
-        return users
-
-
-# async def add_user_in_db(user_data: dict) -> None:
+# async def get_all_live_users():
 #     with Session() as db:
-#         new_user = User(
-#             user_id=user_data['user_id'],
-#             username=user_data['username'],
-#             fullname=user_data['fullname'],
-#             update_date=user_data['update_date']
-#         )
-#         db.add(new_user)
-#         db.commit()
-#         print(f'Добавление пользователя c id = {user_data["user_id"]} завершено!')
+#         users = db.query(User).filter_by(live_status=True).all()
+#         return users
 
 
-async def add_manga_in_user_db(name: str, user_id: int):
-    with Session() as db:
-        user_db = db.query(User).filter_by(user_id=user_id).first()
+async def get_users_all_target(
+    db_management: DatabaseManagement
+) -> list[int]:
+    user_repo: UserRepo = db_management.get_user_repo()
+    change_dict = {'all_target': True, 'live_status': True}
+    users = await user_repo.get_users_list(change_dict)
+    return [user.user_id for user in users]
+
+
+async def add_manga_in_user_db(
+        name: str, user_id: int, db_management: DatabaseManagement
+):
+    user: User = await _get_user(user_id, db_management)
+    if user is not None:
         hash_name = await hash_full_text(name)
-        if user_db is not None:
-            if user_db.target is None:
-                user_db.target = hash_name
-            elif hash_name not in user_db.target:
-                user_db.target += " * " + hash_name
-
-        db.commit()
+        if user.target is None:
+            user.target = hash_name
+        elif hash_name not in user.target:
+            user.target += f' * {hash_name}'
+    await _update_user(user, db_management)
 
 
-async def add_manga_in_target(name: str, user_id: int):
+async def add_manga_in_target(
+    name: str, user_id: int, db_management: DatabaseManagement
+):
     await add_user_in_manga_decr_db(name, user_id)
-    await add_manga_in_user_db(name, user_id)
+    await add_manga_in_user_db(name, user_id, db_management)
 
 
-async def add_manga_in_target_with_url(url: str, user_id: int):
+async def add_manga_in_target_with_url(
+        url: str, user_id: int, db_management: DatabaseManagement
+):
     update = await process_manga_add_parsing(url)
     if update is not None:
         # name, image_orig_link, manga_genre, manga_description, manga_link
@@ -143,41 +103,47 @@ async def add_manga_in_target_with_url(url: str, user_id: int):
         manga_in_db = await check_manga_in_db(name)
         if not manga_in_db:  # добавляю в БД мангу
             await add_description([update])
-        await add_manga_in_target(name, user_id)
+        await add_manga_in_target(name, user_id, db_management)
         return True
     else:
         return False
 
 
-async def read_manga_in_target(user_id: int) -> str:
-    user = await read_user_in_db_with_user_id(user_id)
+# переместить данную функцию в description
+async def read_manga_in_target(
+    user_id: int, db_management: DatabaseManagement
+) -> str:
+    user: User = await _get_user(user_id, db_management)
     manga_names_link_list = await read_manga_in_target_name(user.target)
     if manga_names_link_list:
         return manga_names_link_list
 
 
-async def delete_manga_from_target(hash_name: str, user_id: id):
+async def delete_manga_from_target(
+    hash_name: str, user_id: id, db_management: DatabaseManagement
+):
     if 'del*' in hash_name:
         hash_name = hash_name.replace('del*', '')
-    with Session() as db:
-        user_db = db.query(User).filter_by(user_id=user_id).first()
-        if user_db is not None:
-            if user_db.target is not None:
-                if hash_name in user_db.target:
-                    manga_list = user_db.target.split(' * ')
-                    del manga_list[manga_list.index(hash_name)]
-                    if manga_list != [''] and manga_list != []:
-                        user_db.target = ' * '.join(manga_list)
-                    else:
-                        user_db.target = None
-        db.commit()
+    user_repo: UserRepo = db_management.get_user_repo()
+    user: User = await user_repo.get_user(user_id)
+    if user is not None:
+        if user.target is not None:
+            if hash_name in user.target:
+                manga_list = user.target.split(' * ')
+                manga_list = [x for x in manga_list if x != hash_name]
+                if manga_list not in ([''], []):
+                    user.target = ' * '.join(manga_list)
+                else:
+                    user.target = None
+    await user_repo.update_user(user)
     await del_user_in_manga_decr_db(hash_name, user_id)
 
 
-async def check_manga_in_user_target(user_id: int, hash_name: str) -> bool:
-    with Session() as db:
-        user = db.query(User).filter_by(user_id=int(user_id)).first()
-        return True if user.target is not None and hash_name in user.target else False
+async def check_manga_in_user_target(
+        user_id: int, hash_name: str, db_management: DatabaseManagement
+) -> bool:
+    user: User = await _get_user(user_id, db_management)
+    return (False, True)[user.target is not None and hash_name in user.target]
 
 
 # async def add_or_update_user_status(data: CallbackQuery | Message):

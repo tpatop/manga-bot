@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from aiogram import Bot
 
@@ -9,7 +10,7 @@ from database.db_update import (
 )
 from database.db_users import (
     change_user_live_status,
-    create_user_table,
+    # create_user_table,
     get_users_all_target,
     remake_list_user_without_all_target
 )
@@ -17,12 +18,15 @@ from database.db_description import read_users_by_name_manga
 from lexicon.lexicon_ru import group_list_update_manga
 from keyboards.keyboards import update_manga_keyboard
 from aiogram.exceptions import TelegramForbiddenError
+from database.management import DatabaseManagement
 
 
 TIME_SLEEP = 600  # 10 минут
 
 
-async def bot_send(bot: Bot, chat_id: int, text: str):
+async def bot_send(
+    bot: Bot, chat_id: int, text: str, db_management: DatabaseManagement
+):
     try:
         await bot.send_message(
                         chat_id=chat_id,
@@ -30,20 +34,27 @@ async def bot_send(bot: Bot, chat_id: int, text: str):
                         reply_markup=update_manga_keyboard)
         return True
     except TelegramForbiddenError:  # пользователь заблокировал
-        await change_user_live_status(user_id=chat_id)
+        await change_user_live_status(
+            user_id=chat_id, db_management=db_management)
         return False
 
 
 # принимает список Update
-async def send_message_to_target_users(bot: Bot, updates: list):
+async def send_message_to_target_users(
+    bot: Bot, updates: list, db_management: DatabaseManagement
+):
     if updates is not None:
         user_update_dict = {}
         for update in updates:
-            users = await read_users_by_name_manga(update.name)  # list[int] - пользовательских id
+            # list[int] - пользовательских id
+            users = await read_users_by_name_manga(update.name)
             if users is None:
                 continue
             else:
-                users = await remake_list_user_without_all_target(users)  # очистка от ошибок, связанных с появлением в списке all_target пользователей
+                # очистка от ошибок, связанных с появлением в списке
+                # all_target пользователей
+                users = await remake_list_user_without_all_target(
+                    users, db_management)
             if users is not None:
                 for user_id in users:
                     if user_id not in user_update_dict:
@@ -54,7 +65,7 @@ async def send_message_to_target_users(bot: Bot, updates: list):
         for chat_id, updates in user_update_dict.items():
             text_list = await group_list_update_manga(updates)
             for text in text_list:
-                result = await bot_send(bot, chat_id, text)
+                result = await bot_send(bot, chat_id, text, db_management)
                 # добавляем паузу, чтобы не привысить лимиты Telegram API
                 await asyncio.sleep(0.075)
                 if not result:
@@ -62,45 +73,59 @@ async def send_message_to_target_users(bot: Bot, updates: list):
 
 
 # функция для отправки сообщения всем пользователям из списка
-async def send_message_to_all_target_users(bot: Bot, text_list: list[str]):
+async def send_message_to_all_target_users(
+    bot: Bot, text_list: list[str], db_management: DatabaseManagement
+):
     if text_list is not None:
-        users = await get_users_all_target()
+        users = await get_users_all_target(db_management)
         if users is not None:
-            ignore_user = []  # здесь невозможно остановить пользователя, так как в след тексте он будет
+            # здесь невозможно остановить пользователя, так как
+            # в следующем тексте он будет
+            ignore_user = []
             for text in text_list:
-                for user in users:
-                    if user in ignore_user:  # если бот заблокирован у бота, то он игнорируется после 1го изменения статуса
+                for user_id in users:
+                    # если бот заблокирован у бота,
+                    # то он игнорируется после 1го изменения статуса
+                    if user_id in ignore_user:
                         continue
-                    chat_id = int(user.user_id)
-                    result = await bot_send(bot, chat_id, text)
+                    result = await bot_send(bot, user_id, text, db_management)
                     # добавляем паузу, чтобы не привысить лимиты Telegram API
                     await asyncio.sleep(0.075)  # min = 0.05
                     if not result:
-                        ignore_user.append(user)
+                        ignore_user.append(user_id)
 
 
-async def some_coroutine(bot: Bot):
+async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
     await add_update()
     await asyncio.sleep(5)
-    updates = await read_all_update_status_false()  # список всех обновлений Update со статусом false
+    # список всех обновлений Update со статусом false
+    updates = await read_all_update_status_false()
     if updates:
-        await send_message_to_target_users(bot, updates)  # рассылка по target
-        updates_list = await group_list_update_manga(updates)  # группированный список обновлений в виде объединенных в строку
-        await send_message_to_all_target_users(bot, updates_list)  # массовая рассылка all_target
-        await remake_update_status_in_true()  # перевод у всех обновлений статуса в true
+        # рассылка по target
+        await send_message_to_target_users(bot, updates, db_management)
+        # группированный список обновлений в виде объединенных в строку
+        updates_list = await group_list_update_manga(updates)
+        # массовая рассылка по all_target
+        await send_message_to_all_target_users(
+            bot, updates_list, db_management)
+        # перевод у всех обновлений статуса в true
+        await remake_update_status_in_true()
 
 
-async def additional(bot: Bot):
-
+async def additional(bot: Bot, db_management: DatabaseManagement):
     await create_update_table()
-    await create_user_table()
+    # await create_user_table()
     while True:
         try:
-            await some_coroutine(bot)
+            await some_coroutine(bot, db_management)
         except Exception as exc:
-            print(f'Произошла ошибка:\n\t{exc}\n')
-            with open('errors.txt', 'a') as file:
-                print(f'Произошла ошибка:\n\t{exc}\n', file=file)
+            print('Произошла ошибка в ',
+                  f'{time.strftime("%H.%M.%S", time.localtime())}:',
+                  f'\n\t{exc}\n', sep='')
+            with open('errors.txt', 'a', encoding='UTF-8') as file:
+                print('Произошла ошибка в ',
+                      f'{time.strftime("%H.%M.%S", time.localtime())}:',
+                      f'\n\t{exc}\n', file=file, sep='')
         finally:
             await asyncio.sleep(TIME_SLEEP)
 

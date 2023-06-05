@@ -1,11 +1,11 @@
-from database.db_users import check_manga_in_user_target, read_manga_in_target, read_user_in_db_with_user_id
-from database.db_update import read_all_update_status_false
+from database.db_users import read_manga_in_target, _get_user
 from database.db_description import read_descr_for_hash_name
 from lexicon.const_url import URL_MANGA
+from database.management import DatabaseManagement
 
 
-async def user_menu_text(user_id: str):
-    user = await read_user_in_db_with_user_id(user_id)
+async def user_menu_text(user_id: str, db_management: DatabaseManagement):
+    user = await _get_user(user_id, db_management)
     if user.target is not None:  # and user.target != '':
         manga_count = len(user.target.split(' * '))
     else:
@@ -113,9 +113,11 @@ TIME_DELETE = 10
 warning_message = f'''\n\nДанное сообщение будет удалено через {TIME_DELETE} секунд!\n\n'''
 
 
-async def text_manga_target(user_id: int) -> str:
+async def text_manga_target(
+    user_id: int, db_management: DatabaseManagement
+) -> str:
     text = '''Список отслеживаемой манги:\n\n'''
-    manga_names_link_list = await read_manga_in_target(user_id)
+    manga_names_link_list = await read_manga_in_target(user_id, db_management)
     if manga_names_link_list is not None:
         for i, name_link_tuple in enumerate(manga_names_link_list, 1):
             text += f'{i}. \t<a href="{URL_MANGA + name_link_tuple[1]}">{name_link_tuple[0]}</a>\n'

@@ -25,7 +25,7 @@ async def user_in_database_middleware(
 ):
     db_manegement = data['database_management']
     if message.text == '/start':
-        user_repo: UserRepo = db_manegement.get_repo('UserRepo')
+        user_repo: UserRepo = db_manegement.get_user_repo()
         user_id = message.from_user.id
         result = await user_repo.get_user(user_id)
         if not result:  # необходимо добавить пользователя в БД

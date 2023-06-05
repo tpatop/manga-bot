@@ -15,7 +15,7 @@ bot: Bot
 
 async def main():
     # Инициализируем асинхронную сессию к БД
-    database_management = DatabaseManagement(await init())
+    db_management = DatabaseManagement(await init())
     # Загружаем конфиг в переменную среду
     config: Config = load_config(None)
 
@@ -24,7 +24,7 @@ async def main():
     dp: Dispatcher = Dispatcher()
 
     # регистрируем middleware
-    dp.update.middleware(middleware.PassManagementMiddleware(database_management))
+    dp.update.middleware(middleware.PassManagementMiddleware(db_management))
     dp.message.middleware(middleware.user_in_database_middleware)
 
     # регистрация роутеров в диспетчере
@@ -39,7 +39,7 @@ async def main():
     # await bot.delete_my_commands()
 
     # DataBase - сохранение пользователей
-    asyncio.create_task(additional(bot))  # бесконечный цикл
+    asyncio.create_task(additional(bot, db_management))  # бесконечный цикл
     await dp.start_polling(bot, polling_timeout=30)
     # добавление функции обращения к readmanga
 

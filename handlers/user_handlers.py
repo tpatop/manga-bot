@@ -41,7 +41,8 @@ router: Router = Router()
 # Приветствие и открытие начальной страницы /start
 @router.message(CommandStart())
 async def process_start_command(message: Message, bot: Bot):
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot.delete_message(chat_id=message.chat.id,
+                             message_id=message.message_id)
     await message.answer(
         text=LEXICON['/start'],
         reply_markup=start_keyboard
@@ -60,7 +61,8 @@ async def process_start_command_callback(callback: CallbackQuery):
 
 
 @router.callback_query(Text(text='/help'))
-async def process_help_command(callback: CallbackQuery):
+async def process_help_command(callback: CallbackQuery, **kwargs):
+
     await callback.message.edit_text(
         text=LEXICON['/help'],
         reply_markup=help_keyboard
@@ -68,9 +70,11 @@ async def process_help_command(callback: CallbackQuery):
 
 
 @router.callback_query(Text(text='/user_menu'))
-async def process_user_menu_start(callback: CallbackQuery):
+async def process_user_menu_start(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
+    text = await user_menu_text(callback.from_user.id, db_management)
     await callback.message.edit_text(
-        text=await user_menu_text(callback.from_user.id),
+        text=text,
         reply_markup=user_menu_keyboard
     )
 
@@ -86,11 +90,16 @@ async def process_add_manga_in_target_page(callback: CallbackQuery):
         reply_markup=start_keyboard
     )
 
+
 # добавление в отслеживаемые с помощью ссылки
 @router.message(Text(startswith=f'{URL_MANGA}/'))
-async def process_add_manga_in_target(message: Message, bot: Bot):
-    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
-    result = await add_manga_in_target_with_url(message.text, message.from_user.id)
+async def process_add_manga_in_target_with_url(
+        message: Message, bot: Bot, **kwargs
+):
+    db_management = kwargs.get('database_management')
+    result = await add_manga_in_target_with_url(
+        message.text, message.from_user.id, db_management)
+
     await message.delete()
     if result:
         await message.answer(
@@ -101,15 +110,19 @@ async def process_add_manga_in_target(message: Message, bot: Bot):
     else:
         await message.answer(
             text=warning_message + '''Произошла ошибка при добавлении!
-            Возможно, Вы ввели неправильный адрес манги!'''
+            Возможно, ты ввел неправильный адрес манги!'''
         )
         await asyncio.sleep(TIME_DELETE)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id + 1)
+        await bot.delete_message(
+            chat_id=message.chat.id, message_id=message.message_id + 1)
 
 
 @router.callback_query(Text(text='/manga_target'))
-async def process_answer_target_manga_for_user(callback: CallbackQuery, bot: Bot):
-    text = await text_manga_target(callback.from_user.id)
+async def process_answer_target_manga_for_user(
+    callback: CallbackQuery, bot: Bot, **kwargs
+):
+    db_management = kwargs.get('database_management')
+    text = await text_manga_target(callback.from_user.id, db_management)
     await callback.message.edit_text(
         text=text,
         reply_markup=user_read_manga_keyboard)
@@ -125,8 +138,10 @@ async def process_show_manga_in_target_page(callback: CallbackQuery):
 
 
 @router.callback_query(Text(startswith='del*'))
-async def process_delete_manga_from_target(callback: CallbackQuery):
-    await delete_manga_from_target(callback.data, callback.from_user.id)
+async def process_delete_manga_from_target(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
+    await delete_manga_from_target(
+        callback.data, callback.from_user.id, db_management)
     kb = await delete_manga_keyboard(callback.from_user.id)
     await callback.message.edit_reply_markup(
         reply_markup=kb
@@ -147,16 +162,19 @@ async def process_show_review_list(callback: CallbackQuery):
     )
 
 
-# обработка нажатия на клавиатуру с названием дляя показа описания
+# обработка нажатия на клавиатуру с названием для показа описания
 @router.callback_query(Text(startswith='rev*'))
-async def process_show_review_manga(callback: CallbackQuery):
+async def process_show_review_manga(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
     hash_name = callback.data[4:]
-    text, photo = await create_text_review_manga(hash_name, callback.from_user.id)
-    kb = await manga_review_kb(callback.from_user.id, hash_name)
+    text, photo = await create_text_review_manga(
+        hash_name, callback.from_user.id)
+    markup = await manga_review_kb(
+        callback.from_user.id, hash_name, db_management)
     await callback.message.answer_photo(
         photo=photo,
         caption=text,
-        reply_markup=kb,
+        reply_markup=markup,
         parse_mode='html'
     )
     await callback.answer()
@@ -164,43 +182,57 @@ async def process_show_review_manga(callback: CallbackQuery):
 
 # добавление в отслеживаемые с помощью инлайн-клавиатуры
 @router.callback_query(Text(text='/add_manga_in_target'))
-async def process_add_manga_in_target_callback(callback: CallbackQuery, bot: Bot):
+async def process_add_manga_in_target_callback(
+    callback: CallbackQuery, bot: Bot, **kwargs
+):
+    db_management = kwargs.get('database_management')
     name = callback.message.caption
     name = name[: name.find('[')].strip()  # получил название
     hash_name = await hash_full_text(name)
-    await add_manga_in_target(name, callback.message.chat.id)
+    await add_manga_in_target(
+        name, callback.message.chat.id, db_management)
     await bot.answer_callback_query(callback.id,
                                     text=LEXICON['successful_add'],
                                     show_alert=False)
     text, _ = await create_text_review_manga(hash_name, callback.from_user.id)
+    markup = await manga_review_kb(
+        callback.from_user.id, hash_name, db_management)
     await callback.message.edit_caption(
         caption=text,
-        reply_markup=await manga_review_kb(callback.from_user.id, hash_name)
+        reply_markup=markup
     )
 
 
 # обратное действие (удаление из списка)
 @router.callback_query(Text(text='/del_manga_in_target'))
-async def process_del_manga_in_target_callback(callback: CallbackQuery, bot: Bot):
+async def process_del_manga_in_target_callback(
+    callback: CallbackQuery, bot: Bot, **kwargs
+):
+    db_management = kwargs.get('database_management')
     name = callback.message.caption
     name = name[: name.find('[')].strip()  # получил название
     hash_name = await hash_full_text(name)
-    await delete_manga_from_target(await hash_full_text(name), callback.message.chat.id)
+    await delete_manga_from_target(
+        hash_name, callback.message.chat.id, db_management)
     await bot.answer_callback_query(callback.id,
                                     text=LEXICON['successful_del'],
                                     show_alert=False)
     text, _ = await create_text_review_manga(hash_name, callback.from_user.id)
+    markup = await manga_review_kb(
+        callback.from_user.id, hash_name, db_management)
     await callback.message.edit_caption(
         caption=text,
-        reply_markup=await manga_review_kb(callback.from_user.id, hash_name)
+        reply_markup=markup
     )
 
 
 @router.callback_query(Text(text='/settings'))
-async def show_settings_for_user(callback: CallbackQuery):
+async def show_settings_for_user(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
+    markup = await manga_settings_kb(callback.from_user.id, db_management)
     await callback.message.edit_text(
         text=LEXICON['settings_menu'],
-        reply_markup=await manga_settings_kb(callback.from_user.id)
+        reply_markup=markup
     )
 
 # '/all_target_false': 'Обновления из списка',
@@ -211,21 +243,29 @@ async def show_settings_for_user(callback: CallbackQuery):
 
 @router.callback_query(Text(text='/all_target_true'))
 @router.callback_query(Text(text='/all_target_false'))
-async def process_all_target_user_change(callback: CallbackQuery):
-    await change_user_all_target(callback.from_user.id)
+async def process_all_target_user_change(
+    callback: CallbackQuery, **kwargs
+):
+    db_management = kwargs.get('database_management')
+    await change_user_all_target(callback.from_user.id, db_management)
+    markup = await manga_settings_kb(callback.from_user.id, db_management)
     await callback.message.edit_reply_markup(
         text=LEXICON['settings_menu'],
-        reply_markup=await manga_settings_kb(callback.from_user.id)
+        reply_markup=markup
     )
 
 
 @router.callback_query(Text(text='/status_live_true'))
 @router.callback_query(Text(text='/status_live_false'))
-async def process_user_status_live_change(callback: CallbackQuery):
-    await change_user_live_status(callback.from_user.id)
+async def process_user_status_live_change(
+    callback: CallbackQuery, **kwargs
+):
+    db_management = kwargs.get('database_management')
+    await change_user_live_status(callback.from_user.id, db_management)
+    markup = await manga_settings_kb(callback.from_user.id, db_management)
     await callback.message.edit_reply_markup(
         text=LEXICON['settings_menu'],
-        reply_markup=await manga_settings_kb(callback.from_user.id)
+        reply_markup=markup
     )
 
 

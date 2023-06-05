@@ -73,8 +73,6 @@ async def process_manga_add_parsing(url: str):
         manga_description = soup.find('div', {'class': 'manga-description'})
         if manga_description is not None:
             manga_description = manga_description.text
-        # print(name, manga_link, image_orig_link, manga_genre, manga_description, sep='\n')
-        # image_title, chapters, image_orig_link, manga_genre, manga_description, manga_link
         return name, None, image_orig_link, manga_genre, manga_description, manga_link
     else:
         return None

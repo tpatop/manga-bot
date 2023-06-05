@@ -3,7 +3,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from lexicon.lexicon_ru import LEXICON_SHOW_UPDATE_VIEWER, LEXICON_SETTINGS, LEXICON_REVIEW_COMMAND_DEL, LEXICON_REVIEW_COMMAND, LEXICON_UPDATE_COMMAND, LEXICON_COMMAND, LEXICON_COMMAND_USER_MENU, LEXICON_COMMAND_READ_MANGA
 from lexicon.lexicon_ru import text_manga_list_target
 from services.hash_all import hash_full_text
-from database.db_users import check_manga_in_user_target, read_user_in_db_with_user_id
+from database.db_users import check_manga_in_user_target, _get_user
+from database.management import DatabaseManagement
 
 # стартовая клавиатура, вызываемая и для плохих запросах
 start_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
@@ -48,23 +49,24 @@ ADJUST_CONST: int  # размер клавиатуры
 
 async def delete_manga_keyboard(user_id: int):
     manga_list = await text_manga_list_target(user_id)
-    if len(manga_list) > 30:
-        ADJUST_CONST = 3
-    else:
-        ADJUST_CONST = len(manga_list) // 10 + 1
-    del_str = 'del*'
     if manga_list is not None:
-        kb = InlineKeyboardBuilder(
-        [[InlineKeyboardButton(
-            text=name,
-            callback_data=del_str + await hash_full_text(name))] for name in manga_list  # 1 символ = 2 байта
-        ]
-).adjust(ADJUST_CONST, repeat=True).as_markup()
-        kb = list(kb)[0][1]
-        kb.append([user_menu_but])
-        return InlineKeyboardMarkup(
-            inline_keyboard=kb
-        )
+        if len(manga_list) > 30:
+            ADJUST_CONST = 3
+        else:
+            ADJUST_CONST = len(manga_list) // 10 + 1
+        del_str = 'del*'
+        if manga_list is not None:
+            kb = InlineKeyboardBuilder(
+            [[InlineKeyboardButton(
+                text=name,
+                callback_data=del_str + await hash_full_text(name))] for name in manga_list  # 1 символ = 2 байта
+            ]
+    ).adjust(ADJUST_CONST, repeat=True).as_markup()
+            kb = list(kb)[0][1]
+            kb.append([user_menu_but])
+            return InlineKeyboardMarkup(
+                inline_keyboard=kb
+            )
     else:
         return help_keyboard
 
@@ -111,8 +113,10 @@ async def create_review_manga_kb(callback: CallbackQuery):
 ).adjust(KB_WIDTH, repeat=True).as_markup()
 
 
-async def manga_review_kb(user_id: int, hash_name: str):
-    if await check_manga_in_user_target(user_id, hash_name):
+async def manga_review_kb(
+    user_id: int, hash_name: str, db_management: DatabaseManagement
+):
+    if await check_manga_in_user_target(user_id, hash_name, db_management):
         lexicon = LEXICON_REVIEW_COMMAND_DEL
     else:
         lexicon = LEXICON_REVIEW_COMMAND
@@ -124,8 +128,8 @@ async def manga_review_kb(user_id: int, hash_name: str):
 ).adjust(1, repeat=True).as_markup()
 
 
-async def manga_settings_kb(user_id: int):
-    user = await read_user_in_db_with_user_id(user_id)
+async def manga_settings_kb(user_id: int, db_management: DatabaseManagement):
+    user = await _get_user(user_id, db_management)
     all_target = user.all_target
     status = user.live_status
     if all_target:
