@@ -47,8 +47,10 @@ user_read_manga_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
 ADJUST_CONST: int  # размер клавиатуры
 
 
-async def delete_manga_keyboard(user_id: int):
-    manga_list = await text_manga_list_target(user_id)
+async def delete_manga_keyboard(
+    user_id: int, db_management: DatabaseManagement
+):
+    manga_list = await text_manga_list_target(user_id, db_management)
     if manga_list is not None:
         if len(manga_list) > 30:
             ADJUST_CONST = 3

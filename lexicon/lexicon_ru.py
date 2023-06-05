@@ -1,5 +1,5 @@
 from database.db_users import read_manga_in_target, _get_user
-from database.db_description import read_descr_for_hash_name
+from database.db_description import _get_description
 from lexicon.const_url import URL_MANGA
 from database.management import DatabaseManagement
 
@@ -126,8 +126,10 @@ async def text_manga_target(
     return text
 
 
-async def text_manga_list_target(user_id: int) -> list[tuple[str, str]]:
-    manga_list = await read_manga_in_target(user_id)
+async def text_manga_list_target(
+        user_id: int, db_management: DatabaseManagement
+) -> list[tuple[str, str]]:
+    manga_list = await read_manga_in_target(user_id, db_management)
     if manga_list is not None:
         manga_name = [manga_tuple[0] for manga_tuple in manga_list]
         return manga_name
@@ -168,8 +170,10 @@ async def group_list_update_manga(updates: list):
     return None
 
 
-async def create_text_review_manga(hash_name: str, user_id: int) -> tuple[str]:
-    descr = await read_descr_for_hash_name(hash_name)
+async def create_text_review_manga(
+    hash_name: str, user_id: int, db_management: DatabaseManagement
+) -> tuple[str]:
+    descr = await _get_description(hash_name, db_management)
     if descr is not None:
         text = f'<b>{descr.name}</b>'
         if descr.users is not None and str(user_id) in descr.users:

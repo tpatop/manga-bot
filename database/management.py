@@ -1,8 +1,5 @@
-# from typing import Union
-
-from sqlalchemy import select, update, and_  # , delete, func, insert,
+from sqlalchemy import select, update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-# from sqlalchemy.orm import joinedload
 
 from . import models
 
@@ -27,7 +24,6 @@ class BaseRepo:
 class UserRepo(BaseRepo):
     async def create_user(self, user_data: dict) -> None:
         async with self.session as session:
-
             new_user = models.User(
                     user_id=user_data['user_id'],
                     username=user_data['username'],
@@ -71,7 +67,34 @@ class UserRepo(BaseRepo):
 
 
 class DescriptionRepo(BaseRepo):
-    pass
+    async def create_description(self, description: dict) -> None:
+        async with self.session as session:
+            new_description = models.Description(
+                name=description['name'],
+                hash_name=description['hash_name'],
+                image=description['image'],
+                genre=description['genre'],
+                description=description['description'],
+                link=description['link']
+                )
+            session.add(new_description)
+            await session.commit()
+
+    async def get_description(self, hash_name: str):
+        async with self.session as session:
+            query = select(models.Description).filter_by(hash_name=hash_name)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
+
+    async def update_user_in_description(self, descr: models.Description):
+        async with self.session as session:
+            query = update(models.Description).where(
+                models.Description.name == descr.name
+            ).values(
+                users=descr.users
+            )
+            await session.execute(query)
+            await session.commit()
 
 
 class UpdateRepo(BaseRepo):

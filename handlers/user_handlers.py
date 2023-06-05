@@ -106,7 +106,8 @@ async def process_add_manga_in_target_with_url(
             text=warning_message + LEXICON['successful_add']
         )
         await asyncio.sleep(TIME_DELETE)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id + 1)
+        await bot.delete_message(
+            chat_id=message.chat.id, message_id=message.message_id + 1)
     else:
         await message.answer(
             text=warning_message + '''Произошла ошибка при добавлении!
@@ -129,8 +130,9 @@ async def process_answer_target_manga_for_user(
 
 
 @router.callback_query(Text(text='/manga_delete'))
-async def process_show_manga_in_target_page(callback: CallbackQuery):
-    kb = await delete_manga_keyboard(callback.from_user.id)
+async def process_show_manga_in_target_page(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
+    kb = await delete_manga_keyboard(callback.from_user.id, db_management)
     await callback.message.edit_text(
         text=LEXICON['delete_manga_page'],
         reply_markup=kb
@@ -142,7 +144,7 @@ async def process_delete_manga_from_target(callback: CallbackQuery, **kwargs):
     db_management = kwargs.get('database_management')
     await delete_manga_from_target(
         callback.data, callback.from_user.id, db_management)
-    kb = await delete_manga_keyboard(callback.from_user.id)
+    kb = await delete_manga_keyboard(callback.from_user.id, db_management)
     await callback.message.edit_reply_markup(
         reply_markup=kb
     )
@@ -168,7 +170,8 @@ async def process_show_review_manga(callback: CallbackQuery, **kwargs):
     db_management = kwargs.get('database_management')
     hash_name = callback.data[4:]
     text, photo = await create_text_review_manga(
-        hash_name, callback.from_user.id)
+        hash_name, callback.from_user.id, db_management
+    )
     markup = await manga_review_kb(
         callback.from_user.id, hash_name, db_management)
     await callback.message.answer_photo(
@@ -194,7 +197,9 @@ async def process_add_manga_in_target_callback(
     await bot.answer_callback_query(callback.id,
                                     text=LEXICON['successful_add'],
                                     show_alert=False)
-    text, _ = await create_text_review_manga(hash_name, callback.from_user.id)
+    text, _ = await create_text_review_manga(
+        hash_name, callback.from_user.id, db_management
+    )
     markup = await manga_review_kb(
         callback.from_user.id, hash_name, db_management)
     await callback.message.edit_caption(
@@ -217,7 +222,9 @@ async def process_del_manga_in_target_callback(
     await bot.answer_callback_query(callback.id,
                                     text=LEXICON['successful_del'],
                                     show_alert=False)
-    text, _ = await create_text_review_manga(hash_name, callback.from_user.id)
+    text, _ = await create_text_review_manga(
+        hash_name, callback.from_user.id, db_management
+    )
     markup = await manga_review_kb(
         callback.from_user.id, hash_name, db_management)
     await callback.message.edit_caption(

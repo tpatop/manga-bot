@@ -58,12 +58,6 @@ async def remake_list_user_without_all_target(
     return None
 
 
-# async def get_all_live_users():
-#     with Session() as db:
-#         users = db.query(User).filter_by(live_status=True).all()
-#         return users
-
-
 async def get_users_all_target(
     db_management: DatabaseManagement
 ) -> list[int]:
@@ -89,7 +83,7 @@ async def add_manga_in_user_db(
 async def add_manga_in_target(
     name: str, user_id: int, db_management: DatabaseManagement
 ):
-    await add_user_in_manga_decr_db(name, user_id)
+    await add_user_in_manga_decr_db(name, user_id, db_management)
     await add_manga_in_user_db(name, user_id, db_management)
 
 
@@ -100,9 +94,9 @@ async def add_manga_in_target_with_url(
     if update is not None:
         # name, image_orig_link, manga_genre, manga_description, manga_link
         name = update[0]
-        manga_in_db = await check_manga_in_db(name)
+        manga_in_db = await check_manga_in_db(name, db_management)
         if not manga_in_db:  # добавляю в БД мангу
-            await add_description([update])
+            await add_description([update], db_management)
         await add_manga_in_target(name, user_id, db_management)
         return True
     else:
@@ -114,7 +108,8 @@ async def read_manga_in_target(
     user_id: int, db_management: DatabaseManagement
 ) -> str:
     user: User = await _get_user(user_id, db_management)
-    manga_names_link_list = await read_manga_in_target_name(user.target)
+    manga_names_link_list = await read_manga_in_target_name(
+        user.target, db_management)
     if manga_names_link_list:
         return manga_names_link_list
 
@@ -136,7 +131,7 @@ async def delete_manga_from_target(
                 else:
                     user.target = None
     await user_repo.update_user(user)
-    await del_user_in_manga_decr_db(hash_name, user_id)
+    await del_user_in_manga_decr_db(hash_name, user_id, db_management)
 
 
 async def check_manga_in_user_target(
@@ -144,54 +139,3 @@ async def check_manga_in_user_target(
 ) -> bool:
     user: User = await _get_user(user_id, db_management)
     return (False, True)[user.target is not None and hash_name in user.target]
-
-
-# async def add_or_update_user_status(data: CallbackQuery | Message):
-#     # создаем саму сессию базы данных
-#     with Session() as db:
-
-#         user = db.query(User).filter(User.user_id == data.from_user.id).first()
-
-#         if user is not None:
-#             if user.fullname != data.from_user.full_name:
-#                 user.fullname = data.from_user.full_name
-#             if user.username != data.from_user.username:
-#                 user.username = data.from_user.username
-#             user.last_update_date = data.date
-#             user.live = True
-#             print(f'\n\tИнформация по пользователю {data.from_user.username}'
-#                   'обновлена!\n')
-
-#         else:
-#             user = User(
-#                 user_id=data.from_user.id,
-#                 username=data.from_user.username,
-#                 fullname=data.from_user.full_name,
-#                 last_update_date=data.date,
-#                 live=True)
-
-#             db.add(user)
-#             print(f"\n\tПользователь {data.from_user.username} добавлен в БД!")
-
-#         db.commit()
-
-
-# def user_was_died(data: CallbackQuery | Message):
-#     with Session() as db:
-#         user = db.query(User).filter(User.user_id == data.from_user.id).first()
-#         if user is not None:
-#             user.live = False
-#             db.commit()
-#         # можно вообще его удалить - db.delete(user)
-
-
-# async def read_all_database(data: Message):
-#     with Session() as db:
-#         for user in db.query(User).all():
-#             await data.answer(
-#                 text=f'\t{user.id}. id = {user.user_id}, '
-#                 f'@{user.username}, fullname = {user.fullname}\nlast update '
-#                 f'date = {user.last_update_date}, {user.live = }')
-#         await data.answer(
-#             text='Вывод БД пользователей завершен!',
-#             reply_markup=start_keyboard)

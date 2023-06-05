@@ -10,7 +10,6 @@ from database.db_update import (
 )
 from database.db_users import (
     change_user_live_status,
-    # create_user_table,
     get_users_all_target,
     remake_list_user_without_all_target
 )
@@ -47,7 +46,7 @@ async def send_message_to_target_users(
         user_update_dict = {}
         for update in updates:
             # list[int] - пользовательских id
-            users = await read_users_by_name_manga(update.name)
+            users = await read_users_by_name_manga(update.name, db_management)
             if users is None:
                 continue
             else:
@@ -96,7 +95,7 @@ async def send_message_to_all_target_users(
 
 
 async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
-    await add_update()
+    await add_update(db_management)
     await asyncio.sleep(5)
     # список всех обновлений Update со статусом false
     updates = await read_all_update_status_false()
@@ -128,8 +127,3 @@ async def additional(bot: Bot, db_management: DatabaseManagement):
                       f'\n\t{exc}\n', file=file, sep='')
         finally:
             await asyncio.sleep(TIME_SLEEP)
-
-
-# if __name__ == '__main__':
-#     bot = Bot(token='6202680256:AAGtrg3Ln5aQsJl-NXu6oVgOt_W2C1TbkFA')
-#     asyncio.run(additional())

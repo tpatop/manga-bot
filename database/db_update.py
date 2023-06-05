@@ -1,11 +1,12 @@
+import time
+import sqlalchemy
 from time import sleep
 from random import randint
-import sqlalchemy
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, Integer, String, Boolean, desc
 from services.parser import process_start_parsing
-from database.db_description import create_description_table, add_description
-import time
+from database.db_description import add_description
+from .management import DatabaseManagement
 
 
 SQLITE_BOT_DB = 'bot.db'
@@ -45,8 +46,6 @@ async def create_update_table(database_url: str = SQLITE_BOT_DB):
     conn = engine.connect()
     Base.metadata.create_all(conn)
     conn.close()
-    # pон сон сrint('СОздание 1 таблицы завершено')
-    engine = await create_description_table(engine)
 
 
 async def process_clean_db_update_not_all(session: Session) -> Session:
@@ -120,7 +119,7 @@ async def create_result(session: Session, chapters: list, new_update, len_update
     return result
 
 
-async def add_update():  # функция обновления БД обновлений
+async def add_update(db_management: DatabaseManagement):  # функция обновления БД обновлений
     '''Функция добавление записей об обновленных проектах'''
     session = Session()
     try:
@@ -177,7 +176,7 @@ async def add_update():  # функция обновления БД обновл
         session = await process_combining_values(session)
         session.close()
         if updates:
-            await add_description(updates)
+            await add_description(updates, db_management)
             del updates  # не тестировал, в случае ошибок, удалить (15.03.2023 16.41)
 
 
