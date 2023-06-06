@@ -1,14 +1,21 @@
-from sqlalchemy import select, update, and_
+from sqlalchemy import desc, select, update, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import models
 
 
-attribute = {
+user_attr = {
             'user_id': models.User.user_id,
             'all_target': models.User.all_target,
             'live_status': models.User.live_status
         }
+
+update_attr = {
+    'name': models.Update.name,
+    'chapter_start': models.Update.chapter_start,
+    'chapter_end': models.Update.chapter_end,
+    'status': models.Update.status
+}
 
 
 class BaseRepo:
@@ -59,7 +66,7 @@ class UserRepo(BaseRepo):
     async def get_users_list(self, change_dict: dict[str, str]):
         async with self.session as session:
             query = select(models.User).filter(
-                and_(*[attribute[k] == v for k, v in change_dict.items()])
+                and_(*[user_attr[k] == v for k, v in change_dict.items()])
             )
             result = await session.execute(query)
             result = [user[0] for user in result.all() if user]
@@ -98,7 +105,52 @@ class DescriptionRepo(BaseRepo):
 
 
 class UpdateRepo(BaseRepo):
-    pass
+    async def create_or_update_updates(self, updates: list[models.Update]):
+        async with self.session as session:
+            session.add_all(updates)
+            await session.commit()
+
+    async def get_updates(self, filter: dict[str, str]):
+        async with self.session as session:
+            query = select(models.Update).filter(
+                and_(*[update_attr[k] == v for k, v in filter.items()])
+            )
+            result = await session.execute(query)
+            result = [upd[0] for upd in result.all() if upd]
+            return result
+
+    async def count_update(self):
+        async with self.session as session:
+            query = select(func.count()).select_from(models.Update)
+            result = await session.execute(query)
+            count = result.scalar()
+            return count
+
+    async def delete_updates(self, excess: int):
+        Update = models.Update
+        async with self.session as session:
+            query = select(Update).order_by(Update.id.asc()).limit(excess)
+            result = await session.execute(query)
+            to_delete = result.scalars()
+            for upd in to_delete:
+                await session.delete(upd)
+            await session.commit()
+
+    async def get_unique_name_update(
+        self, limit: int = None, updates: list[models.Update] = None
+    ):
+        async with self.session as session:
+            if limit is not None:
+                query = select(models.Update.name).distinct(). \
+                        order_by(desc(models.Update.id)).limit(limit)
+                result = await session.execute(query)
+                result = [upd[0] for upd in result.all()]
+            elif updates is not None:
+                result = []
+                for upd in updates:
+                    if upd.name not in result:
+                        result.append(upd.name)
+            return result
 
 
 class DatabaseManagement:

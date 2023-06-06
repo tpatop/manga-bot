@@ -2,10 +2,9 @@ import asyncio
 import time
 
 from aiogram import Bot
-
 from database.db_update import (
     read_all_update_status_false,
-    create_update_table, add_update,
+    add_update,
     remake_update_status_in_true
 )
 from database.db_users import (
@@ -96,9 +95,7 @@ async def send_message_to_all_target_users(
 
 async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
     await add_update(db_management)
-    await asyncio.sleep(5)
-    # список всех обновлений Update со статусом false
-    updates = await read_all_update_status_false()
+    updates = await read_all_update_status_false(db_management)
     if updates:
         # рассылка по target
         await send_message_to_target_users(bot, updates, db_management)
@@ -108,12 +105,10 @@ async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
         await send_message_to_all_target_users(
             bot, updates_list, db_management)
         # перевод у всех обновлений статуса в true
-        await remake_update_status_in_true()
+        await remake_update_status_in_true(db_management)
 
 
 async def additional(bot: Bot, db_management: DatabaseManagement):
-    await create_update_table()
-    # await create_user_table()
     while True:
         try:
             await some_coroutine(bot, db_management)

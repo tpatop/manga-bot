@@ -286,9 +286,10 @@ async def process_show_menu_update_viewer(callback: CallbackQuery):
 
 # показ обновлений 5-30
 @router.callback_query(Text(startswith='/showup*'))
-async def process_show_update_viewer(callback: CallbackQuery):
+async def process_show_update_viewer(callback: CallbackQuery, **kwargs):
+    db_management = kwargs.get('database_management')
     quantity = int(callback.data.split()[1])
-    updates = await process_show_desc_updates_list(quantity)
+    updates = await process_show_desc_updates_list(quantity, db_management)
     text_list = await group_list_update_manga(updates)
     await callback.answer()
     for text in text_list:

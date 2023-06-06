@@ -69,7 +69,7 @@ async def process_manga_add_parsing(url: str):
         image_orig_link = soup.find('div', {'class': 'subject-cover col-sm-5'}).find('img')
         if image_orig_link is not None:
             image_orig_link = image_orig_link['src']
-        manga_genre = [genre.text for genre in soup.find_all('span', {'class': 'elem_genre'})]
+        manga_genre = [genre.text.strip(', ') for genre in soup.find_all('span', {'class': 'elem_genre'})]
         manga_description = soup.find('div', {'class': 'manga-description'})
         if manga_description is not None:
             manga_description = manga_description.text
