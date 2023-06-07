@@ -8,7 +8,7 @@ from .models import Update
 
 
 NUMBER_OF_PAGES: int = 20
-UPDATE_QUANTITY: int = 1000
+UPDATE_QUANTITY: int = 2000
 
 
 def TIME_SLEEP():
@@ -54,6 +54,7 @@ async def process_combining_values(db_management: DatabaseManagement):
             chapters = []
             for data in update:
                 chapters.extend([x for x in (data.chapter_start, data.chapter_end) if x is not None])
+                chapters = list(set(chapters))
                 data.status = True
             await update_repo.create_or_update_updates(update)
             if await process_check_chapters(chapters):
@@ -65,8 +66,9 @@ async def process_combining_values(db_management: DatabaseManagement):
                 )
             if chapters:
                 new_update = Update(name=name,
-                                    chapter_start=chapters[0],
-                                    chapter_end=chapters[-1])
+                                    chapter_start=chapters[0])
+                if chapters[0] != chapters[-1]:
+                    new_update.chapter_end = chapters[-1]
                 result_list.append(new_update)
     await update_repo.create_or_update_updates(result_list)
 
@@ -89,8 +91,12 @@ async def cheaking_for_repetition(
                       'chapter_end': None}
         case 2 | 3:
             filter = {'name': new_update.name,
-                      'chapter_start': chapters[0],
-                      'chapter_end': chapters[-1]}
+                      'chapter_start': chapters[0]}
+            if chapters[0] != chapters[-1]:
+                filter['chapter_end'] = chapters[-1]
+            else:
+                filter['chapter_end'] = None
+
     result = await update_repo.get_updates(filter)
     return result[0] if result else None
 
@@ -126,17 +132,18 @@ async def add_update(db_management: DatabaseManagement):
                 if update[1] == 0:
                     continue
                 new_update = Update(name=update[0])
+                chapters = list(set(update[1]))
                 # проверка наличия слов в обновлении, как 1, так и 2, 3
                 if await process_check_chapters(update[1]):
-                    chapters = update[1]
+                    chapters = chapters
                 elif len(update[1]) > 1:
                     # для правильного расположения обновленных глав
                     chapters = sorted(
-                        update[1],
+                        chapters,
                         key=lambda x: tuple(map(float, x.split(' - ')))
                     )
                 else:
-                    chapters = update[1]
+                    chapters = chapters
                 match len(chapters):
                     case 1:
                         new_update.chapter_start = chapters[0]
@@ -146,7 +153,7 @@ async def add_update(db_management: DatabaseManagement):
                             new_update.chapter_end = chapters[-1]
                 # проверка на повторение в БД
                 result = await cheaking_for_repetition(
-                    db_management, chapters, new_update, len(update[1]))
+                    db_management, chapters, new_update, len(chapters))
                 if result is not None:
                     # что бы убрать ошибку, возникающую при дублировании конца
                     # и начала страниц одним проектом с одинаковыми главами
