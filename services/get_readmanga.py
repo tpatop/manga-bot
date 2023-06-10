@@ -61,7 +61,7 @@ async def send_message_to_target_users(
                     user_update_dict[user_id].append(update)
 
         for chat_id, updates in user_update_dict.items():
-            text_list = await group_list_update_manga(updates)
+            text_list = await group_list_update_manga(updates, db_management)
             for text in text_list:
                 result = await bot_send(bot, chat_id, text, db_management)
                 # добавляем паузу, чтобы не привысить лимиты Telegram API
@@ -100,7 +100,7 @@ async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
         # рассылка по target
         await send_message_to_target_users(bot, updates, db_management)
         # группированный список обновлений в виде объединенных в строку
-        updates_list = await group_list_update_manga(updates)
+        updates_list = await group_list_update_manga(updates, db_management)
         # массовая рассылка по all_target
         await send_message_to_all_target_users(
             bot, updates_list, db_management)

@@ -2,6 +2,7 @@ from database.db_users import read_manga_in_target, _get_user
 from database.db_description import _get_description
 from lexicon.const_url import URL_MANGA
 from database.management import DatabaseManagement
+from services.hash_all import hash_full_text
 
 
 async def user_menu_text(user_id: str, db_management: DatabaseManagement):
@@ -11,7 +12,7 @@ async def user_menu_text(user_id: str, db_management: DatabaseManagement):
     else:
         manga_count = 0
     return f'''Приветствую тебя, {user.fullname}!
-    Ты отслеживаешь <i><b>{manga_count}</b></i> проектов!
+    Ты отслеживаешь <u><b>{manga_count}</b></u> проектов!
     Ты {('не подписан', 'подписан')[user.all_target]} на массовую рассылку обновлений.
     Бот {('не может', 'может')[user.live_status]} отправлять тебе рассылку.'''
 
@@ -49,32 +50,32 @@ LEXICON: dict[str, str] = {
 
 # для стартовой, дб не очень крупными, под размеры кнопки
 LEXICON_COMMAND: dict[str, str] = {
-    '/help': '''Информацией о боте''',
+    '/help': '''❓Информацией о боте''',
     '/user_menu': '''Меню пользователя'''
     }
 
 
 LEXICON_COMMAND_USER_MENU: dict[str, str] = {
-    '/settings': '''Настройки пользователя''',
+    '/settings': '''🛠Настройки пользователя''',
     '/manga_target': '''Список отслеживаемой манги''',
     '/show_update': '''Последние обновления''',
-    '/start': '''Вернуться в начало'''
+    '/start': '''🔚Вернуться в начало'''
 }
 
 
 LEXICON_COMMAND_READ_MANGA: dict[str, str] = {
-    '/manga_add': '''Добавить''',
-    '/manga_delete': '''Удалить''',
-    '/user_menu': '''Меню пользователя''',
-    '/start': '''Вернуться в начало'''
+    '/manga_add': '''➕Добавить''',
+    '/manga_delete': '''🗑Удалить''',
+    '/user_menu': '''🔙Меню пользователя''',
+    '/start': '''🔚Вернуться в начало'''
 }
 
 
 LEXICON_SETTINGS: dict[str, str] = {
-    '/all_target_false': 'Не получать все обновления!',
-    '/all_target_true': 'Получать все обновления сайта!',
-    '/status_live_false': 'Не получать сообщения!',
-    '/status_live_true': 'Получать сообщения!'
+    '/all_target_false': '✅Получать все обновления сайта!',
+    '/all_target_true': '❌Не получать все обновления!',
+    '/status_live_false': '✅Получать сообщения!',
+    '/status_live_true': '❌Не получать сообщения!'
 }
 
 
@@ -84,7 +85,7 @@ LEXICON_SETTINGS: dict[str, str] = {
 
 
 LEXICON_UPDATE_COMMAND: dict[str, str] = {
-    '/review': 'Вывести информацию о проектах',
+    '/review': 'Информация о проектах',
     '/del_update': 'Удалить рассылку'
 }
 
@@ -109,7 +110,7 @@ LEXICON_SHOW_UPDATE_VIEWER: dict[str, str] = {
 }
 
 
-TIME_DELETE = 10
+TIME_DELETE = 5
 warning_message = f'''\n\nДанное сообщение будет удалено через {TIME_DELETE} секунд!\n\n'''
 
 
@@ -139,32 +140,43 @@ async def text_manga_list_target(
 LEN_UPDATE_LIST: int = 10
 
 
-async def text_update_manga_for_all(i: int, updates: list):
+async def text_update_manga_for_all(
+        i: int, updates: list,
+        db_management: DatabaseManagement
+):
     text: str = ''
     if updates is not None:
         for j, manga in enumerate(updates, i * LEN_UPDATE_LIST + 1):
             if j == 1:
-                text = '''Вышли следующие обновления!\n\n'''
-            text += f'\t{j}. {manga.name}\n'
+                text = '''Вышли обновления:\n\n'''
+            link = await _get_description(
+                await hash_full_text(manga.name),
+                db_management
+            )
+            link = f'{URL_MANGA}' + link.link
+            text += f'\t{j}. <a href="{link}">{manga.name}</a>\n'
             if manga.chapter_start is None:
-                text += 'Обновление вышло без глав!\n'
+                text += 'Без глав!\n'
             elif manga.chapter_end is None:
-                text += f'Вышла новая глава:\t{manga.chapter_start}\n'
+                text += f'Новая глава:\t{manga.chapter_start}\n'
             else:
-                text += f'Вышли новые главы:\tс {manga.chapter_start} по {manga.chapter_end}\n'
+                text += f'Новые главы:\tс {manga.chapter_start} по {manga.chapter_end}\n'
             text += '\n'
         return text
     return None
 
 
-async def group_list_update_manga(updates: list):
+async def group_list_update_manga(
+        updates: list,
+        db_management: DatabaseManagement
+):
     if updates is not None:
         updates_list = []
         for i in range(0, len(updates), LEN_UPDATE_LIST):
             updates_list.append(updates[i: i + LEN_UPDATE_LIST])
         updates = []
         for i, update in enumerate(updates_list, 0):
-            update = await text_update_manga_for_all(i, update)
+            update = await text_update_manga_for_all(i, update, db_management)
             updates.append(update)
         return updates
     return None

@@ -290,7 +290,7 @@ async def process_show_update_viewer(callback: CallbackQuery, **kwargs):
     db_management = kwargs.get('database_management')
     quantity = int(callback.data.split()[1])
     updates = await process_show_desc_updates_list(quantity, db_management)
-    text_list = await group_list_update_manga(updates)
+    text_list = await group_list_update_manga(updates, db_management)
     await callback.answer()
     for text in text_list:
         await callback.message.answer(

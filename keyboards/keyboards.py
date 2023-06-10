@@ -1,10 +1,24 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    CallbackQuery
+)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from lexicon.lexicon_ru import LEXICON_SHOW_UPDATE_VIEWER, LEXICON_SETTINGS, LEXICON_REVIEW_COMMAND_DEL, LEXICON_REVIEW_COMMAND, LEXICON_UPDATE_COMMAND, LEXICON_COMMAND, LEXICON_COMMAND_USER_MENU, LEXICON_COMMAND_READ_MANGA
+from lexicon.lexicon_ru import (
+    LEXICON_SHOW_UPDATE_VIEWER,
+    LEXICON_SETTINGS,
+    LEXICON_REVIEW_COMMAND_DEL,
+    LEXICON_REVIEW_COMMAND,
+    LEXICON_UPDATE_COMMAND,
+    LEXICON_COMMAND,
+    LEXICON_COMMAND_USER_MENU,
+    LEXICON_COMMAND_READ_MANGA
+)
 from lexicon.lexicon_ru import text_manga_list_target
 from services.hash_all import hash_full_text
 from database.db_users import check_manga_in_user_target, _get_user
 from database.management import DatabaseManagement
+
 
 # стартовая клавиатура, вызываемая и для плохих запросах
 start_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
@@ -59,11 +73,11 @@ async def delete_manga_keyboard(
         del_str = 'del*'
         if manga_list is not None:
             kb = InlineKeyboardBuilder(
-            [[InlineKeyboardButton(
-                text=name,
-                callback_data=del_str + await hash_full_text(name))] for name in manga_list  # 1 символ = 2 байта
-            ]
-    ).adjust(ADJUST_CONST, repeat=True).as_markup()
+                [[InlineKeyboardButton(
+                    text=name,
+                    callback_data=del_str + await hash_full_text(name))] for name in manga_list  # 1 символ = 2 байта
+              ]
+            ).adjust(ADJUST_CONST, repeat=True).as_markup()
             kb = list(kb)[0][1]
             kb.append([user_menu_but])
             return InlineKeyboardMarkup(
@@ -81,7 +95,6 @@ update_manga_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
 ).adjust(1, repeat=True).as_markup()
 
 
-from aiogram.types import CallbackQuery
 KB_WIDTH = 1
 
 
@@ -125,34 +138,21 @@ async def manga_review_kb(
     return InlineKeyboardBuilder(
             [[InlineKeyboardButton(
                 text=lexicon[key],
-                callback_data=key
-        )] for key in lexicon]
-).adjust(1, repeat=True).as_markup()
+                callback_data=key)] for key in lexicon]
+            ).adjust(1, repeat=True).as_markup()
 
 
 async def manga_settings_kb(user_id: int, db_management: DatabaseManagement):
     user = await _get_user(user_id, db_management)
-    all_target = user.all_target
-    status = user.live_status
-    if all_target:
-        all_target_but = InlineKeyboardButton(
-            text=LEXICON_SETTINGS['/all_target_false'],
-            callback_data='/all_target_false'
+    all_target = f'/all_target_{user.all_target}'.lower()
+    status = f'/status_live_{user.live_status}'.lower()
+    all_target_but = InlineKeyboardButton(
+            text=LEXICON_SETTINGS[all_target],
+            callback_data=all_target
         )
-    else:
-        all_target_but = InlineKeyboardButton(
-            text=LEXICON_SETTINGS['/all_target_true'],
-            callback_data='/all_target_true'
-        )
-    if status:
-        status_but = InlineKeyboardButton(
-            text=LEXICON_SETTINGS['/status_live_false'],
-            callback_data='/status_live_false'
-        )
-    else:
-        status_but = InlineKeyboardButton(
-            text=LEXICON_SETTINGS['/status_live_true'],
-            callback_data='/status_live_true'
+    status_but = InlineKeyboardButton(
+            text=LEXICON_SETTINGS[status],
+            callback_data=status
         )
     user_menu = InlineKeyboardButton(
         text='''Меню пользователя''',
@@ -171,46 +171,3 @@ last_update_review_kb: InlineKeyboardBuilder = InlineKeyboardBuilder(
         callback_data=key) for key, value in LEXICON_SHOW_UPDATE_VIEWER.items()
     ]]
 ).add(user_menu_but).adjust(2, 2, 1).as_markup()
-
-
-#         return InlineKeyboardMarkup(
-#             inline_keyboard=[[InlineKeyboardButton(
-#                 text=name,
-#                 callback_data=rew_str + await hash_full_text(name))] for name in names
-#             ]
-# )
-
-# # стартовая клавиатура
-# start_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
-#     [
-#         [InlineKeyboardButton(
-#             text=LEXICON_COMMAND[f'{command}'],
-#             callback_data=command) for command in LEXICON_COMMAND]
-#     ]
-# ).adjust(1, repeat=True).as_markup()
-
-
-# cancel_button: InlineKeyboardButton = InlineKeyboardButton(
-#     text=LEXICON['/cancel'],
-#     callback_data='/cancel'
-# )
-
-
-# write_url_button = InlineKeyboardButton(
-#     text=LEXICON['/write_url'],
-#     callback_data='/write_url'
-# )
-
-
-# url_keyboard: InlineKeyboardBuilder = InlineKeyboardBuilder(
-#     [
-#         [InlineKeyboardButton(
-#            text=f'Открыть сайт: {name}.',
-#             url=url) for name, url in LEXICON_URL.items()]
-#     ]
-# ).add(write_url_button, cancel_button).adjust(1, repeat=True).as_markup()
-
-
-# cancel_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
-#     inline_keyboard=[[cancel_button]]
-# )
