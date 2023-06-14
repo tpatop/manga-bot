@@ -23,11 +23,11 @@ LEXICON: dict[str, str] = {
     Для ознакомления с целью этого бота и его возможностями выбирай соответствующую кнопку, не кусает :)''',
     '/help': f'''Данный бот был создан с целью помочь тебе следить за выходом новых глав твоей любимой манги!
 
-    Обновления отслеживаются с сайта: <b>{URL_MANGA}</b>
+    Обновления отслеживаются с сайтов: <b>{', '.join(URL_MANGA)}</b>
 
-    Бот находится в режиме бета-тестирования, поэтому возможны отдельные ошибки и неполадки, о которых прошу тебя сообщить мне в обратной связи на <b>@my_bot_helper</b>. Скриншоты и предложения одобряются :)''',
+    Бот находится в режиме тестирования, поэтому возможны отдельные ошибки и неполадки, о которых прошу тебя сообщить мне в обратной связи на <b>@my_bot_helper</b>. Скриншоты и предложения одобряются :)''',
     'add_manga_page': f'''Для добавления манги в список отслеживаемых необходимо:
-    1. Перейти на сайт {URL_MANGA}
+    1. Перейти на один из сайтов: {', '.join(URL_MANGA)}
     2. Найти мангу, которую Вы хотите добавить в отслеживаемые
     3. Скопировать ссылку
     4. Отправить ссылку на мангу в данной форме
@@ -121,7 +121,7 @@ async def text_manga_target(
     manga_names_link_list = await read_manga_in_target(user_id, db_management)
     if manga_names_link_list is not None:
         for i, name_link_tuple in enumerate(manga_names_link_list, 1):
-            text += f'{i}. \t<a href="{URL_MANGA + name_link_tuple[1]}">{name_link_tuple[0]}</a>\n'
+            text += f'{i}. \t<a href="{name_link_tuple[1]}">{name_link_tuple[0]}</a>\n'
     else:
         text += 'На данный момент ты не отслеживаешь ни одного проекта!'
     return text
@@ -149,11 +149,11 @@ async def text_update_manga_for_all(
         for j, manga in enumerate(updates, i * LEN_UPDATE_LIST + 1):
             if j == 1:
                 text = '''Вышли обновления:\n\n'''
-            link = await _get_description(
+            descr = await _get_description(
                 await hash_full_text(manga.name),
                 db_management
             )
-            link = f'{URL_MANGA}' + link.link
+            link = descr.link
             text += f'\t{j}. <a href="{link}">{manga.name}</a>\n'
             if manga.chapter_start is None:
                 text += 'Без глав!\n'
@@ -194,5 +194,5 @@ async def create_text_review_manga(
             text += '\t\t<i>[Все ещё не списке!]</i>\n\n'
         text += f'Жанры: {descr.genre.lower() if descr.genre else "отсутствуют"}\n\n'
         text += f'Описание:\n\t\t{descr.description if descr.description else "На данный момент отсутствует!"}\n\n'
-        text += f'Ссылка для чтения: <a href="{URL_MANGA + descr.link}"> перейти на сайт </a>\n\n'
+        text += f'Ссылка для чтения: <a href="{descr.link}"> перейти на сайт </a>\n\n'
         return (text[: 1024], descr.image)  # ограничение caption - 1024

@@ -12,7 +12,7 @@ router: Router = Router()
 async def process_send_answer(message: Message, bot: Bot):
     await message.delete()
     await message.answer(
-        text=warning_message + LEXICON['bad_message_answer'])
+        text=LEXICON['bad_message_answer'] + warning_message)
     await asyncio.sleep(TIME_DELETE)
     await bot.delete_message(chat_id=message.chat.id,
                              message_id=message.message_id + 1)

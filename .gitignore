@@ -8,7 +8,7 @@ __pycache__/
 analize
 !last.json
 !all.json
-bot.db
+*.db
 .env.example
 python_core
 errors.txt

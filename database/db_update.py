@@ -8,7 +8,7 @@ from .models import Update
 
 
 NUMBER_OF_PAGES: int = 20
-UPDATE_QUANTITY: int = 2000
+UPDATE_QUANTITY: int = 20000
 
 
 def TIME_SLEEP():
@@ -107,7 +107,7 @@ async def responce_error(exc):
               f'{time.strftime("%H:%M:%S", time.localtime())}', file=file)
 
 
-async def add_update(db_management: DatabaseManagement):
+async def add_update(number_url: int, db_management: DatabaseManagement):
     '''Функция добавление записей обновлений проектов'''
     update_repo: UpdateRepo = db_management.get_update_repo()
     try:
@@ -123,7 +123,7 @@ async def add_update(db_management: DatabaseManagement):
             # удалить (для отладки и проверки работы)
             print(f'{time.strftime("%H:%M:%S", time.localtime())}',
                   f'- обработка страницы {page + 1}\n')
-            zipf = await process_start_parsing(page)
+            zipf = await process_start_parsing(number_url, page)
             if zipf is None or zipf == []:
                 flag = True
                 continue

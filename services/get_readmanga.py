@@ -19,7 +19,7 @@ from aiogram.exceptions import TelegramForbiddenError
 from database.management import DatabaseManagement
 
 
-TIME_SLEEP = 600  # 10 минут
+TIME_SLEEP = 300  # 5 минут
 
 
 async def bot_send(
@@ -93,8 +93,11 @@ async def send_message_to_all_target_users(
                         ignore_user.append(user_id)
 
 
-async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
-    await add_update(db_management)
+async def some_coroutine(
+        number_url: int, bot: Bot,
+        db_management: DatabaseManagement
+):
+    await add_update(number_url, db_management)
     updates = await read_all_update_status_false(db_management)
     if updates:
         # рассылка по target
@@ -109,9 +112,11 @@ async def some_coroutine(bot: Bot, db_management: DatabaseManagement):
 
 
 async def additional(bot: Bot, db_management: DatabaseManagement):
+    number_url = 0
     while True:
         try:
-            await some_coroutine(bot, db_management)
+            number_url = (number_url + 1) % 3
+            await some_coroutine(number_url, bot, db_management)
         except Exception as exc:
             print('Произошла ошибка в ',
                   f'{time.strftime("%H.%M.%S", time.localtime())}:',

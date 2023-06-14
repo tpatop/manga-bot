@@ -92,7 +92,9 @@ async def process_add_manga_in_target_page(callback: CallbackQuery):
 
 
 # добавление в отслеживаемые с помощью ссылки
-@router.message(Text(startswith=f'{URL_MANGA}/'))
+@router.message(Text(startswith=f'{URL_MANGA[0]}/'))
+@router.message(Text(startswith=f'{URL_MANGA[1]}/'))
+@router.message(Text(startswith=f'{URL_MANGA[2]}/'))
 async def process_add_manga_in_target_with_url(
         message: Message, bot: Bot, **kwargs
 ):
@@ -103,15 +105,15 @@ async def process_add_manga_in_target_with_url(
     await message.delete()
     if result:
         await message.answer(
-            text=warning_message + LEXICON['successful_add']
+            text=LEXICON['successful_add'] + warning_message
         )
         await asyncio.sleep(TIME_DELETE)
         await bot.delete_message(
             chat_id=message.chat.id, message_id=message.message_id + 1)
     else:
         await message.answer(
-            text=warning_message + '''Произошла ошибка при добавлении!
-            Возможно, ты ввел неправильный адрес манги!'''
+            text='''Произошла ошибка при добавлении!
+Возможно, ты ввел неправильный адрес манги!''' + warning_message
         )
         await asyncio.sleep(TIME_DELETE)
         await bot.delete_message(

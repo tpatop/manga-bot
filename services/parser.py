@@ -46,13 +46,15 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
     return title, chapters, image_orig_link, manga_genre, manga_description, manga_link
 
 
-async def process_start_parsing(page: int = 0):
+async def process_start_parsing(number_url: int, page: int = 0):
     # создание url страницы
-    url: str = f'{URL_MANGA}/?offset={page * 30}#last-updates'
+    url: str = f'{URL_MANGA[number_url]}/?offset={page * 30}#last-updates'
     # забираем страницу с сайта
     html = await process_download_html(url)
     title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)
     # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n\n')
+    # Дообработка ссылок на мангу
+    manga_link = [URL_MANGA[number_url] + link for link in manga_link]
     # Упаковываем
     data_tuple = zip(title, chapters, image_orig_link, manga_genre, manga_description, manga_link)
     return data_tuple
@@ -61,7 +63,6 @@ async def process_start_parsing(page: int = 0):
 async def process_manga_add_parsing(url: str):
     html = await process_download_html(url)
     if html is not None:
-        manga_link = url.replace(f'{URL_MANGA}', '')
         soup = BeautifulSoup(html, 'html.parser')
         name = soup.find('span', {'class': 'name'})
         if name is not None:
@@ -73,11 +74,6 @@ async def process_manga_add_parsing(url: str):
         manga_description = soup.find('div', {'class': 'manga-description'})
         if manga_description is not None:
             manga_description = manga_description.text
-        return name, None, image_orig_link, manga_genre, manga_description, manga_link
+        return name, None, image_orig_link, manga_genre, manga_description, url
     else:
         return None
-
-# asyncio.run(process_manga_add_parsing(f'{URL_MANGa}/skazaniia_o_demonah_i_bogah__A5664'))
-
-# для отладки
-# asyncio.run(process_start_parsing())
