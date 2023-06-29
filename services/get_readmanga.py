@@ -112,7 +112,7 @@ async def some_coroutine(
 
 
 async def additional(bot: Bot, db_management: DatabaseManagement):
-    number_url = 0
+    number_url = -1
     while True:
         try:
             number_url = (number_url + 1) % 3

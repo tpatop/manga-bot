@@ -38,8 +38,8 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
     # print(*manga_description, sep='\n\n')
 
     # получение списка жанров
-    manga_genre = [[genre.text for genre in x.find_all('span', {'class': 'badge badge-light'})]
-                    for x in div.find_all('div', {'class': 'html-popover-holder'})]
+    manga_genre = [[genre.text for genre in x.find_all('a', {'href': True, 'class': 'badge badge-light element-link'})]
+                    for x in div.find_all('div', {'class': 'desc'})]
     manga_genre = [x for x in manga_genre if x != []]
     # print(*manga_genre, sep='\n\n')
     # print(title, chapters, image_orig_link, manga_genre, manga_description, manga_link, sep='\n')
