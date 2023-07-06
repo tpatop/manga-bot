@@ -29,7 +29,7 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
     # Получение списка обновленных глав
     chapters = div.find_all('div', {'class': 'chapters-text'})
     chapters = tuple([' '.join(x.text.strip().split()[:3])
-                    for x in par.find_all('a', href=True)]
+                    for x in par.find_all('a', {'href': True, 'class': 'chapter-link'})]
                     for par in chapters)
     # print(*zip(title, image_orig_link, chapters), sep='\n')
 
