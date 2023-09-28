@@ -48,7 +48,7 @@ async def _process_parsing_html(html: str) -> Tuple[List[str], List[str], List[s
 
 async def process_start_parsing(number_url: int, page: int = 0):
     # создание url страницы
-    url: str = f'{URL_MANGA[number_url]}/?offset={page * 30}#last-updates'
+    url: str = f'{URL_MANGA[number_url]}/?offset={page * 50}#last-updates'
     # забираем страницу с сайта
     html = await process_download_html(url)
     title, chapters, image_orig_link, manga_genre, manga_description, manga_link = await _process_parsing_html(html)

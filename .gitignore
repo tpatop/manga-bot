@@ -1,8 +1,6 @@
 .env
 .idea
-
 .vscode/
-venv/
 __pycache__/
 вспомогательное
 analize
@@ -10,5 +8,5 @@ analize
 !all.json
 *.db
 .env.example
-python_core
+pycore
 errors.txt
