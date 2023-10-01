@@ -42,7 +42,6 @@ async def bot_send_to_all_user_live(
     bot: Bot, text: str, db_management: DatabaseManagement
 ):
     users = await get_users_live(db_management)
-    print(len(users), users)
     text = text.replace('/send_message ', '')
     for user_id in users:
         try:
@@ -52,6 +51,16 @@ async def bot_send_to_all_user_live(
         except (TelegramForbiddenError, TelegramBadRequest):
             await change_user_live_status(
                 user_id=user_id, db_management=db_management)
+
+
+async def bot_send_statistic(
+    bot: Bot, user_id: int, db_management: DatabaseManagement
+):
+    users = await get_users_live(db_management)
+    stat = len(users)
+    await bot.send_message(
+            chat_id=user_id,
+            text=f"{stat} живых пользователей")
 
 
 # принимает список Update

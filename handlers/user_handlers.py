@@ -33,8 +33,10 @@ from database.db_users import (
 from database.db_update import process_show_desc_updates_list
 from lexicon.const_url import URL_MANGA
 from services.hash_all import hash_full_text
-from services.get_readmanga import bot_send_to_all_user_live
-
+from services.get_readmanga import (
+    bot_send_statistic,
+    bot_send_to_all_user_live
+)
 
 router: Router = Router()
 
@@ -307,3 +309,10 @@ async def process_show_update_viewer(callback: CallbackQuery, **kwargs):
 async def process_semd_to_all_live_users(message: Message, bot: Bot, **kwargs):
     db_management = kwargs.get('database_management')
     await bot_send_to_all_user_live(bot, message.text, db_management)
+
+
+# Для Подсчета живых пользователей
+@router.message(Text(text='/stat'))
+async def process_send_statistic(message: Message, bot: Bot, **kwargs):
+    db_management = kwargs.get('database_management')
+    await bot_send_statistic(bot, message.chat.id, db_management)
