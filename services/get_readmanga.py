@@ -8,6 +8,7 @@ from database.db_update import (
     remake_update_status_in_true
 )
 from database.db_users import (
+    get_users_live,
     change_user_live_status,
     get_users_all_target,
     remake_list_user_without_all_target
@@ -15,7 +16,7 @@ from database.db_users import (
 from database.db_description import read_users_by_name_manga
 from lexicon.lexicon_ru import group_list_update_manga
 from keyboards.keyboards import update_manga_keyboard
-from aiogram.exceptions import TelegramForbiddenError
+from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 from database.management import DatabaseManagement
 
 
@@ -35,6 +36,22 @@ async def bot_send(
         await change_user_live_status(
             user_id=chat_id, db_management=db_management)
         return False
+
+
+async def bot_send_to_all_user_live(
+    bot: Bot, text: str, db_management: DatabaseManagement
+):
+    users = await get_users_live(db_management)
+    print(len(users), users)
+    text = text.replace('/send_message ', '')
+    for user_id in users:
+        try:
+            await bot.send_message(
+                            chat_id=user_id,
+                            text=text)
+        except (TelegramForbiddenError, TelegramBadRequest):
+            await change_user_live_status(
+                user_id=user_id, db_management=db_management)
 
 
 # принимает список Update

@@ -58,6 +58,15 @@ async def remake_list_user_without_all_target(
     return None
 
 
+async def get_users_live(
+    db_management: DatabaseManagement
+) -> list[int]:
+    user_repo: UserRepo = db_management.get_user_repo()
+    change_dict = {'live_status': True}
+    users = await user_repo.get_users_list(change_dict)
+    return [user.user_id for user in users]
+
+
 async def get_users_all_target(
     db_management: DatabaseManagement
 ) -> list[int]:
