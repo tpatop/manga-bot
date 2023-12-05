@@ -36,6 +36,8 @@ async def bot_send(
         await change_user_live_status(
             user_id=chat_id, db_management=db_management)
         return False
+    except TelegramBadRequest:
+        print('Oh my god')
 
 
 async def bot_send_to_all_user_live(
@@ -140,16 +142,16 @@ async def some_coroutine(
 async def additional(bot: Bot, db_management: DatabaseManagement):
     number_url = -1
     while True:
-        try:
-            number_url = (number_url + 1) % 3
-            await some_coroutine(number_url, bot, db_management)
-        except Exception as exc:
-            print('Произошла ошибка в ',
-                  f'{time.strftime("%H.%M.%S", time.localtime())}:',
-                  f'\n\t{exc}\n', sep='')
-            with open('errors.txt', 'a', encoding='UTF-8') as file:
-                print('Произошла ошибка в ',
-                      f'{time.strftime("%H.%M.%S", time.localtime())}:',
-                      f'\n\t{exc}\n', file=file, sep='')
-        finally:
-            await asyncio.sleep(TIME_SLEEP)
+    # try:
+        number_url = (number_url + 1) % 3
+        await some_coroutine(number_url, bot, db_management)
+    # except Exception as exc:
+        # print('Произошла ошибка в ',
+        #         f'{time.strftime("%H.%M.%S", time.localtime())}:',
+        #         f'\n\t{exc}\n', sep='')
+        # with open('errors.txt', 'a', encoding='UTF-8') as file:
+        #     print('Произошла ошибка в ',
+        #             f'{time.strftime("%H.%M.%S", time.localtime())}:',
+        #             f'\n\t{exc}\n', file=file, sep='')
+    # finally:
+        await asyncio.sleep(TIME_SLEEP)
