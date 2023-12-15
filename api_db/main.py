@@ -10,7 +10,7 @@ logging.basicConfig(
     format='%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     handlers=[
         logging.StreamHandler(),  # Вывод на консоль
-        logging.FileHandler('api_db/logfile.log')  # Запись в файл
+        logging.FileHandler('logfile.log')  # Запись в файл
     ],
     level=logging.INFO
 )

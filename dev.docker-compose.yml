@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  api_db:
+    container_name: api_db
+    build:
+      context: ./api_db
+      dockerfile: api_db.Dockerfile
+    working_dir: /code
+    volumes:
+      - ./api_db/:/code
+    ports:
+      - 8080:8080
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    restart: always
+
+  parser:
+    container_name: parser
+    build:
+      context: ./api_parser
+      dockerfile: parser.Dockerfile
+    working_dir: /code
+    volumes:
+      - ./api_parser/:/code
+    depends_on:
+      - api_db
+    restart: always

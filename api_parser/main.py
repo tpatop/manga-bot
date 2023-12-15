@@ -11,7 +11,7 @@ logging.basicConfig(
     format='%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     handlers=[
         logging.StreamHandler(),  # Вывод на консоль
-        logging.FileHandler('api_parser/logfile.log')  # Запись в файл
+        logging.FileHandler('logfile.log')  # Запись в файл
     ],
     level=logging.INFO
 )
@@ -30,16 +30,18 @@ class UpdateManga(BaseModel):
 
 def process_download_page(url: str, headers):
     result = get(url, headers=headers)
+    logging.info(f'process_download_page - {url = }, {result.status_code}')
     return result.text
 
 
 def process_validate_chapters(data: list) -> str:
     result = []
     for el in data:
-        if el != '...' and el != '-' and el.lower() != 'сингл' and el.strip(',').isalpha():
-            continue
-        else:
+        if el.lower() in ('...', '-', 'сингл', 'экстра', 'трейлер') \
+                or not any([x.isalpha() for x in el]):
             result.append(el)
+        else:
+            logging.info(f'Не попадает элемент: {el}')
     if result:
         return ' '.join(result)
 
@@ -90,9 +92,10 @@ def get_url_id(url: str):
 
 def process_send_updates_in_db(updates):
     updates = [update.model_dump() for update in updates]
-    response = post('http://127.0.0.1:8080/manga/add_update', json=updates)
-    # необходима проверка статуса кода и возвращения кода разрешения или запрета парсинга следующей страницы
-    # вместо True должно быть что-то типа response.status
+    response = post('http://api_db:8080/manga/add_updates', json=updates)
+    logging.info(f'process_send_updates_in_db - status_code = {response.status_code}')
+    if response.status_code == 400:
+        return False
     return True
 
 
@@ -104,16 +107,15 @@ def process_start_parsing():
             html = process_download_page(url, HEADERS)
             result = process_parsing_html(html, url_id)
             status = process_send_updates_in_db(result)
-            logging.info(f'Url = {url},\tstatus= {status}')
             if not status:
                 break
-            # нужна отправка на сервер для проверки наличия в БД
-            sleep(5)
+            sleep(10)
 
 
 if __name__ == '__main__':
     while True:
         try:
+            sleep(5)  # Доп. время для запуска uvicorn на 1 запуске
             logging.info('Start process')
             process_start_parsing()
         except Exception as e:

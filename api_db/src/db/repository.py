@@ -33,6 +33,11 @@ class Basic(ABC):
 
 
 class MangaRepo(Basic):
+    async def get_one_on_url(self, url_id: int, link: str):
+        async with self.session as session:
+            query = select(Manga).filter_by(url_id=url_id, link=link)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
 
     async def get_one(self, manga_id: int):
         async with self.session as session:
@@ -64,9 +69,12 @@ class MangaRepo(Basic):
 
 class UpdateMangaRepo(Basic):
 
-    async def get_one(self, id: int):
+    async def get_one(self, update: UpdateManga):
         async with self.session as session:
-            query = select(UpdateManga).filter_by(update_manga_id=id)
+            query = select(UpdateManga).filter_by(
+                manga_id=update.manga_id,
+                chapters=update.chapters
+            )
             result = await session.execute(query)
             return result.scalar_one_or_none()
 

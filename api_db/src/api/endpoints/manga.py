@@ -2,7 +2,8 @@ import logging
 from typing import Annotated, Union, List
 from fastapi import APIRouter, Depends
 
-from src.api.schemas.schemas import UpdateManga
+from src.api.schemas.schemas import MangaUpdate
+from src.services.manga_services import MangaServices
 
 
 router = APIRouter()
@@ -14,9 +15,10 @@ async def process_get_updates():
     pass
 
 
-@router.post('/add_update')
-async def process_add_updates(updates: list[UpdateManga]):
+@router.post('/add_updates')
+async def process_add_updates(updates: list[MangaUpdate]):
     '''Для добавления новых обновлений манги со стороны парсера'''
-    logging.info(f'process_add_updates')
+    logging.info('process_add_updates')
 
-    return
+    ms = MangaServices()
+    await ms.process_all_updates_data(updates)

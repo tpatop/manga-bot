@@ -1,0 +1,4 @@
+pycore
+*.pyc
+*git
+*.db
