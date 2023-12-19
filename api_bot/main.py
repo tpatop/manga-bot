@@ -1,53 +1,56 @@
 import asyncio
+import logging
 
 from aiogram import Bot, Dispatcher
 
-from config_data.config import load_config, Config
-import handlers.middleware as middleware
-from handlers.user_handlers import router as router1
-from handlers.other_handlers import router as router2
-from services.get_readmanga import additional
-from database import DatabaseManagement, init
+from src.core.config import load_config, Config
+import src.handlers.middleware as middleware
+from src.handlers.users import router as user_router
+from src.handlers.others import router as other_router
 
 
-bot: Bot
+# Конфигурация логгирования
+logging.basicConfig(
+    format='%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Вывод на консоль
+        logging.FileHandler('api_bot/logfile.log')  # Запись в файл
+    ],
+    level=logging.INFO
+)
 
 
 async def main():
-    # Инициализируем асинхронную сессию к БД
-    db_management = DatabaseManagement(await init())
-    # Загружаем конфиг в переменную среду
-    config: Config = load_config(None)
+    # Загрузка конфигурации
+    config: Config = load_config()
 
     # Создание объекта бота и диспетчера
     bot: Bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
     dp: Dispatcher = Dispatcher()
 
-    # регистрируем middleware
-    dp.update.middleware(middleware.PassManagementMiddleware(db_management))
+    # регистрация middleware
     dp.message.middleware(middleware.user_in_database_middleware)
 
     # регистрация роутеров в диспетчере
-    dp.include_router(router1)
-    dp.include_router(router2)
+    dp.include_router(user_router)
+    dp.include_router(other_router)
 
-    # удаляем предыдущие запросы
+    # удаление предыдущих запросов
     # await bot.delete_webhook(drop_pending_updates=True)
-    # # создаем меню
+    # # создание меню
     # await set_main_menu(bot)
-    # удаляем меню
-    # await bot.delete_my_commands()
+    # удаление меню
+    await bot.delete_my_commands()
 
-    # DataBase - сохранение пользователей
-    asyncio.create_task(additional(bot, db_management))  # бесконечный цикл
+    # Запуск прослушивания
     await dp.start_polling(bot, polling_timeout=30)
-    # добавление функции обращения к readmanga
 
 
 if __name__ == '__main__':
 
     try:
         # Запускаем функцию main в асинхронном режиме
+        # logging.info('Bot start!')
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        print('Bot stopped!')
+        logging.info('Bot stopped!')

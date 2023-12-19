@@ -1,7 +1,8 @@
 import asyncio
 from aiogram import Router, Bot
 from aiogram.types import Message, CallbackQuery
-from lexicon.lexicon_ru import LEXICON, warning_message, TIME_DELETE
+
+from src.lexicon.lexicon_ru import LEXICON, warning_message, TIME_DELETE
 
 
 router: Router = Router()
@@ -9,11 +10,12 @@ router: Router = Router()
 
 # Хэндлер для сообщений, которые не попали в другие хэндлеры
 @router.message()
-async def process_send_answer(message: Message, bot: Bot):
+async def process_send_bad_answer(message: Message, bot: Bot):
     await message.delete()
     await message.answer(
         text=LEXICON['bad_message_answer'] + warning_message)
     await asyncio.sleep(TIME_DELETE)
+    await message.delete()
     await bot.delete_message(chat_id=message.chat.id,
                              message_id=message.message_id + 1)
 

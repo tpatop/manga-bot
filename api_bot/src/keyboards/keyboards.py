@@ -4,7 +4,8 @@ from aiogram.types import (
     CallbackQuery
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from lexicon.lexicon_ru import (
+
+from src.lexicon.lexicon_ru import (
     LEXICON_SHOW_UPDATE_VIEWER,
     LEXICON_SETTINGS,
     LEXICON_REVIEW_COMMAND_DEL,
@@ -12,12 +13,10 @@ from lexicon.lexicon_ru import (
     LEXICON_UPDATE_COMMAND,
     LEXICON_COMMAND,
     LEXICON_COMMAND_USER_MENU,
-    LEXICON_COMMAND_READ_MANGA
+    LEXICON_COMMAND_READ_MANGA,
+    text_manga_list_target
 )
-from lexicon.lexicon_ru import text_manga_list_target
-from services.hash_all import hash_full_text
-from database.db_users import check_manga_in_user_target, _get_user
-from database.management import DatabaseManagement
+from src.services.hash_all import hash_full_text
 
 
 # стартовая клавиатура, вызываемая и для плохих запросах
@@ -62,9 +61,9 @@ ADJUST_CONST: int  # размер клавиатуры
 
 
 async def delete_manga_keyboard(
-    user_id: int, db_management: DatabaseManagement
+    user_id: int
 ):
-    manga_list = await text_manga_list_target(user_id, db_management)
+    manga_list = await text_manga_list_target(user_id)
     if manga_list is not None:
         if len(manga_list) > 30:
             ADJUST_CONST = 3
@@ -129,9 +128,9 @@ async def create_review_manga_kb(callback: CallbackQuery):
 
 
 async def manga_review_kb(
-    user_id: int, hash_name: str, db_management: DatabaseManagement
+    user_id: int, hash_name: str
 ):
-    if await check_manga_in_user_target(user_id, hash_name, db_management):
+    if await check_manga_in_user_target(user_id, hash_name):
         lexicon = LEXICON_REVIEW_COMMAND_DEL
     else:
         lexicon = LEXICON_REVIEW_COMMAND
@@ -142,8 +141,8 @@ async def manga_review_kb(
             ).adjust(1, repeat=True).as_markup()
 
 
-async def manga_settings_kb(user_id: int, db_management: DatabaseManagement):
-    user = await _get_user(user_id, db_management)
+async def manga_settings_kb(user_id: int):
+    user = await _get_user(user_id)
     all_target = f'/all_target_{user.all_target}'.lower()
     status = f'/status_live_{user.live_status}'.lower()
     all_target_but = InlineKeyboardButton(

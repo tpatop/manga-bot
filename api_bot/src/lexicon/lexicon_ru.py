@@ -1,20 +1,20 @@
-from database.db_users import read_manga_in_target, _get_user
-from database.db_description import _get_description
-from lexicon.const_url import URL_MANGA
-from database.management import DatabaseManagement
-from services.hash_all import hash_full_text
+from src.lexicon.const_url import URL_MANGA
+
+from src.services.hash_all import hash_full_text
 
 
-async def user_menu_text(user_id: str, db_management: DatabaseManagement):
-    user = await _get_user(user_id, db_management)
-    if user.target is not None:  # and user.target != '':
-        manga_count = len(user.target.split(' * '))
-    else:
-        manga_count = 0
-    return f'''Приветствую тебя, {user.fullname}!
-    Ты отслеживаешь <u><b>{manga_count}</b></u> проектов!
-    Ты {('не подписан', 'подписан')[user.all_target]} на массовую рассылку обновлений.
-    Бот {('не может', 'может')[user.live_status]} отправлять тебе рассылку.'''
+async def user_menu_text(user_id: str):
+    text = f'Пользователь: {user_id}\n'
+    # Ты отслеживаешь <u><b>{manga_count}</b></u> проектов!
+    # Ты {('не подписан', 'подписан')[user.all_target]} на массовую рассылку обновлений.
+    # Бот {('не может', 'может')[user.live_status]} отправлять тебе рассылку.'''
+    return text
+
+
+LEXICON_2 = {
+    'menu': user_menu_text,
+
+}
 
 
 LEXICON: dict[str, str] = {
@@ -115,10 +115,10 @@ warning_message = f'''\n\nДанное сообщение будет удале�
 
 
 async def text_manga_target(
-    user_id: int, db_management: DatabaseManagement
+    user_id: int
 ) -> str:
     text = '''Список отслеживаемой манги:\n\n'''
-    manga_names_link_list = await read_manga_in_target(user_id, db_management)
+    manga_names_link_list = await read_manga_in_target(user_id)
     if manga_names_link_list is not None:
         for i, name_link_tuple in enumerate(manga_names_link_list, 1):
             text += f'{i}. \t<a href="{name_link_tuple[1]}">{name_link_tuple[0]}</a>\n'
@@ -128,9 +128,9 @@ async def text_manga_target(
 
 
 async def text_manga_list_target(
-        user_id: int, db_management: DatabaseManagement
+        user_id: int
 ) -> list[tuple[str, str]]:
-    manga_list = await read_manga_in_target(user_id, db_management)
+    manga_list = await read_manga_in_target(user_id)
     if manga_list is not None:
         manga_name = [manga_tuple[0] for manga_tuple in manga_list]
         return manga_name
@@ -142,7 +142,7 @@ LEN_UPDATE_LIST: int = 10
 
 async def text_update_manga_for_all(
         i: int, updates: list,
-        db_management: DatabaseManagement
+        db_management
 ):
     text: str = ''
     if updates is not None:
@@ -168,7 +168,7 @@ async def text_update_manga_for_all(
 
 async def group_list_update_manga(
         updates: list,
-        db_management: DatabaseManagement
+        db_management
 ):
     if updates is not None:
         updates_list = []
@@ -176,16 +176,16 @@ async def group_list_update_manga(
             updates_list.append(updates[i: i + LEN_UPDATE_LIST])
         updates = []
         for i, update in enumerate(updates_list, 0):
-            update = await text_update_manga_for_all(i, update, db_management)
+            update = await text_update_manga_for_all(i, update)
             updates.append(update)
         return updates
     return None
 
 
 async def create_text_review_manga(
-    hash_name: str, user_id: int, db_management: DatabaseManagement
+    hash_name: str, user_id: int
 ) -> tuple[str]:
-    descr = await _get_description(hash_name, db_management)
+    descr = await _get_description(hash_name)
     if descr is not None:
         text = f'<b>{descr.name}</b>'
         if descr.users is not None and str(user_id) in descr.users:

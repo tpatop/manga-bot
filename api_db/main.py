@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 
 from src.api.endpoints.manga import router as manga_router
+from src.api.endpoints.users import router as users_router
 
 
 # Конфигурация логгирования
@@ -19,6 +20,7 @@ logging.basicConfig(
 app = FastAPI()
 
 app.include_router(prefix='/manga', router=manga_router)
+app.include_router(prefix='/users', router=users_router)
 
 
 if __name__ == '__main__':

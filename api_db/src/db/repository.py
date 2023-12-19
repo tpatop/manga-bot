@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from .models import Manga, UpdateManga
+from .models import Manga, UpdateManga, Users
 
 
 class Basic(ABC):
@@ -33,6 +33,7 @@ class Basic(ABC):
 
 
 class MangaRepo(Basic):
+
     async def get_one_on_url(self, url_id: int, link: str):
         async with self.session as session:
             query = select(Manga).filter_by(url_id=url_id, link=link)
@@ -86,6 +87,32 @@ class UpdateMangaRepo(Basic):
             except IntegrityError as exc:
                 await session.rollback()
                 raise exc
+
+    async def update_one(self):
+        pass
+
+    async def delete_one(self):
+        pass
+
+
+class UserRepo(Basic):
+
+    async def create_one(self, user: Users):
+        async with self.session as session:
+            session.add(user)
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                await session.rollback()
+                raise exc
+
+    async def get_one(self, user: Users):
+        async with self.session as session:
+            query = select(Users).filter_by(
+                user_id=user.user_id
+            )
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
 
     async def update_one(self):
         pass
