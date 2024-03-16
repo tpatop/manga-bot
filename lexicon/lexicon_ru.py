@@ -72,8 +72,8 @@ LEXICON_COMMAND_READ_MANGA: dict[str, str] = {
 
 
 LEXICON_SETTINGS: dict[str, str] = {
-    '/all_target_false': '✅Получать все обновления сайта!',
-    '/all_target_true': '❌Не получать все обновления!',
+    # '/all_target_false': '✅Получать все обновления сайта!',
+    # '/all_target_true': '❌Не получать все обновления!',
     '/status_live_false': '✅Получать сообщения!',
     '/status_live_true': '❌Не получать сообщения!'
 }

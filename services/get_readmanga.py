@@ -10,8 +10,8 @@ from database.db_update import (
 from database.db_users import (
     get_users_live,
     change_user_live_status,
-    get_users_all_target,
-    remake_list_user_without_all_target
+    # get_users_all_target,
+    # remake_list_user_without_all_target
 )
 from database.db_description import read_users_by_name_manga
 from lexicon.lexicon_ru import group_list_update_manga
@@ -74,17 +74,17 @@ async def send_message_to_target_users(
             users = await read_users_by_name_manga(update.name, db_management)
             if users is None:
                 continue
-            else:
-                # очистка от ошибок, связанных с появлением в списке
-                # all_target пользователей
-                users = await remake_list_user_without_all_target(
-                    users, db_management)
-            if users is not None:
-                for user_id in users:
-                    if user_id not in user_update_dict:
-                        user_update_dict[user_id] = [update]
-                        continue
-                    user_update_dict[user_id].append(update)
+            # else:
+            #     # очистка от ошибок, связанных с появлением в списке
+            #     # all_target пользователей
+            #     users = await remake_list_user_without_all_target(
+            #         users, db_management)
+            # if users is not None:
+            for user_id in users:
+                if user_id not in user_update_dict:
+                    user_update_dict[user_id] = [update]
+                    continue
+                user_update_dict[user_id].append(update)
 
         for chat_id, updates in user_update_dict.items():
             text_list = await group_list_update_manga(updates, db_management)
@@ -96,27 +96,27 @@ async def send_message_to_target_users(
                     break
 
 
-# функция для отправки сообщения всем пользователям из списка
-async def send_message_to_all_target_users(
-    bot: Bot, text_list: list[str], db_management: DatabaseManagement
-):
-    if text_list is not None:
-        users = await get_users_all_target(db_management)
-        if users is not None:
-            # здесь невозможно остановить пользователя, так как
-            # в следующем тексте он будет
-            ignore_user = []
-            for text in text_list:
-                for user_id in users:
-                    # если бот заблокирован у бота,
-                    # то он игнорируется после 1го изменения статуса
-                    if user_id in ignore_user:
-                        continue
-                    result = await bot_send(bot, user_id, text, db_management)
-                    # добавляем паузу, чтобы не привысить лимиты Telegram API
-                    await asyncio.sleep(0.075)  # min = 0.05
-                    if not result:
-                        ignore_user.append(user_id)
+# # функция для отправки сообщения всем пользователям из списка
+# async def send_message_to_all_target_users(
+#     bot: Bot, text_list: list[str], db_management: DatabaseManagement
+# ):
+#     if text_list is not None:
+#         users = await get_users_all_target(db_management)
+#         if users is not None:
+#             # здесь невозможно остановить пользователя, так как
+#             # в следующем тексте он будет
+#             ignore_user = []
+#             for text in text_list:
+#                 for user_id in users:
+#                     # если бот заблокирован у бота,
+#                     # то он игнорируется после 1го изменения статуса
+#                     if user_id in ignore_user:
+#                         continue
+#                     result = await bot_send(bot, user_id, text, db_management)
+#                     # добавляем паузу, чтобы не привысить лимиты Telegram API
+#                     await asyncio.sleep(0.075)  # min = 0.05
+#                     if not result:
+#                         ignore_user.append(user_id)
 
 
 async def some_coroutine(
@@ -129,10 +129,10 @@ async def some_coroutine(
         # рассылка по target
         await send_message_to_target_users(bot, updates, db_management)
         # группированный список обновлений в виде объединенных в строку
-        updates_list = await group_list_update_manga(updates, db_management)
+        # updates_list = await group_list_update_manga(updates, db_management)
         # массовая рассылка по all_target
-        await send_message_to_all_target_users(
-            bot, updates_list, db_management)
+        # await send_message_to_all_target_users(
+        #     bot, updates_list, db_management)
         # перевод у всех обновлений статуса в true
         await remake_update_status_in_true(db_management)
 

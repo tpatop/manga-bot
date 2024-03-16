@@ -25,7 +25,7 @@ from keyboards.keyboards import (
 )
 from database.db_users import (
     change_user_live_status,
-    change_user_all_target,
+    # change_user_all_target,
     add_manga_in_target,
     add_manga_in_target_with_url,
     delete_manga_from_target
@@ -253,18 +253,18 @@ async def show_settings_for_user(callback: CallbackQuery, **kwargs):
 # '/status_live_false': 'Получать обновления!'
 
 
-@router.callback_query(Text(text='/all_target_true'))
-@router.callback_query(Text(text='/all_target_false'))
-async def process_all_target_user_change(
-    callback: CallbackQuery, **kwargs
-):
-    db_management = kwargs.get('database_management')
-    await change_user_all_target(callback.from_user.id, db_management)
-    markup = await manga_settings_kb(callback.from_user.id, db_management)
-    await callback.message.edit_reply_markup(
-        text=LEXICON['settings_menu'],
-        reply_markup=markup
-    )
+# @router.callback_query(Text(text='/all_target_true'))
+# @router.callback_query(Text(text='/all_target_false'))
+# async def process_all_target_user_change(
+#     callback: CallbackQuery, **kwargs
+# ):
+#     db_management = kwargs.get('database_management')
+#     await change_user_all_target(callback.from_user.id, db_management)
+#     markup = await manga_settings_kb(callback.from_user.id, db_management)
+#     await callback.message.edit_reply_markup(
+#         text=LEXICON['settings_menu'],
+#         reply_markup=markup
+#     )
 
 
 @router.callback_query(Text(text='/status_live_true'))

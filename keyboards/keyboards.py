@@ -144,12 +144,12 @@ async def manga_review_kb(
 
 async def manga_settings_kb(user_id: int, db_management: DatabaseManagement):
     user = await _get_user(user_id, db_management)
-    all_target = f'/all_target_{user.all_target}'.lower()
+    # all_target = f'/all_target_{user.all_target}'.lower()
     status = f'/status_live_{user.live_status}'.lower()
-    all_target_but = InlineKeyboardButton(
-            text=LEXICON_SETTINGS[all_target],
-            callback_data=all_target
-        )
+    # all_target_but = InlineKeyboardButton(
+    #         text=LEXICON_SETTINGS[all_target],
+    #         callback_data=all_target
+    #     )
     status_but = InlineKeyboardButton(
             text=LEXICON_SETTINGS[status],
             callback_data=status
@@ -159,7 +159,7 @@ async def manga_settings_kb(user_id: int, db_management: DatabaseManagement):
         callback_data='/user_menu'
         )
     return InlineKeyboardMarkup(inline_keyboard=[
-        [all_target_but],
+        # [all_target_but],
         [status_but],
         [user_menu]
     ])

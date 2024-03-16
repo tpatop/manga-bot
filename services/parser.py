@@ -64,7 +64,7 @@ async def process_manga_add_parsing(url: str):
     html = await process_download_html(url)
     if html is not None:
         soup = BeautifulSoup(html, 'html.parser')
-        name = soup.find('span', {'class': 'name'})
+        name = soup.find_all('span', {'class': 'name'})[-1]
         if name is not None:
             name = name.text
         image_orig_link = soup.find('div', {'class': 'subject-cover col-sm-5'}).find('img')
